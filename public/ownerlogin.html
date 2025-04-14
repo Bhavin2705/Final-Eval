@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Log In</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .error-message {
+            color: #ef4444;
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 1rem;
+            height: 1rem;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .success-message {
+            color: #10b981;
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 min-h-screen flex items-center justify-center">
+    <div id="authContainer" class="bg-white rounded-lg shadow-lg overflow-hidden w-full max-w-md">
+        <div id="loginForm" class="p-8">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6">Welcome Back!</h2>
+            <form id="loginFormElement" novalidate>
+                <div class="mb-4">
+                    <label for="loginEmail" class="block text-gray-700 mb-2">Email</label>
+                    <input type="email" id="loginEmail"
+                        class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="Enter your email" required>
+                    <div id="loginEmailError" class="error-message hidden">Please enter a valid email address.</div>
+                </div>
+
+                <div class="mb-6">
+                    <label for="loginPassword" class="block text-gray-700 mb-2">Password</label>
+                    <input type="password" id="loginPassword"
+                        class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="Enter your password" required>
+                    <div id="loginPasswordError" class="error-message hidden">Invalid email or password.</div>
+                </div>
+
+                <button type="submit" id="loginButton"
+                    class="w-full bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-all flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed">
+                    <span id="buttonText">Log In</span>
+                    <span id="loadingSpinner" class="loading-spinner hidden ml-2"></span>
+                </button>
+
+                <div id="successMessage" class="success-message hidden"></div>
+
+                <p class="text-center text-gray-600 mt-4">
+                    New here? <a href="/signup.html" class="text-blue-500 hover:underline">Register</a>
+                </p>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Get DOM elements for form interaction
+        const loginFormElement = document.getElementById('loginFormElement');
+        const loginButton = document.getElementById('loginButton');
+        const buttonText = document.getElementById('buttonText');
+        const loadingSpinner = document.getElementById('loadingSpinner');
+        const successMessage = document.getElementById('successMessage');
+
+        // Hardcoded credentials for owner and admin (temporary for demo purposes)
+        const OWNER_CREDENTIALS = { email: 'owner@example.com', password: 'Owner123!' };
+        const ADMIN_CREDENTIALS = { email: 'admin@example.com', password: 'Admin123!' };
+
+        // Handle form submission
+        loginFormElement.addEventListener('submit', (e) => {
+            e.preventDefault(); // Prevent default form reload
+            console.log('Form submission prevented');
+
+            // Get input values
+            const email = document.getElementById('loginEmail').value.trim();
+            const password = document.getElementById('loginPassword').value.trim();
+
+            // Clear previous error and success messages
+            document.getElementById('loginEmailError').classList.add('hidden');
+            document.getElementById('loginPasswordError').classList.add('hidden');
+            successMessage.classList.add('hidden');
+
+            let isValid = true;
+
+            // Validate email format
+            if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                document.getElementById('loginEmailError').classList.remove('hidden');
+                isValid = false;
+            }
+
+            // Validate password presence
+            if (!password) {
+                document.getElementById('loginPasswordError').classList.remove('hidden');
+                isValid = false;
+            }
+
+            // Exit if validation fails
+            if (!isValid) {
+                console.log('Validation failed');
+                return;
+            }
+
+            // Show loading state
+            loginButton.disabled = true;
+            buttonText.textContent = 'Logging in...';
+            loadingSpinner.classList.remove('hidden');
+            console.log('Processing login...');
+
+            try {
+                // Check owner credentials (temporary hardcoded logic)
+                if (email === OWNER_CREDENTIALS.email && password === OWNER_CREDENTIALS.password) {
+                    console.log('Owner credentials matched');
+                    // Store user data and role in localStorage for dashboard access
+                    localStorage.setItem('loggedInUser', JSON.stringify({ name: 'Owner', email, profilePicture: '' }));
+                    localStorage.setItem('loggedInRole', 'owner');
+                    successMessage.textContent = 'Login successful as Owner!';
+                    successMessage.classList.remove('hidden');
+                    console.log('Redirecting to owner.html');
+                    // Delay redirect to show success message
+                    setTimeout(() => {
+                        window.location.href = '/owner.html';
+                    }, 1000);
+                    return;
+                }
+
+                // Check admin credentials (temporary hardcoded logic)
+                if (email === ADMIN_CREDENTIALS.email && password === ADMIN_CREDENTIALS.password) {
+                    console.log('Admin credentials matched');
+                    localStorage.setItem('loggedInUser', JSON.stringify({ name: 'Admin', email, profilePicture: '' }));
+                    localStorage.setItem('loggedInRole', 'admin');
+                    successMessage.textContent = 'Login successful as Admin!';
+                    successMessage.classList.remove('hidden');
+                    console.log('Redirecting to admin.html');
+                    setTimeout(() => {
+                        window.location.href = '/admin.html';
+                    }, 1000);
+                    return;
+                }
+
+                // Check regular users in localStorage (temporary until backend is implemented)
+                const users = JSON.parse(localStorage.getItem('users')) || [];
+                const user = users.find(u => u.email === email && u.password === password);
+
+                if (!user) {
+                    console.log('No user found in localStorage');
+                    throw new Error('Invalid email or password.');
+                }
+
+                // Regular user login
+                console.log('Regular user matched:', user);
+                localStorage.setItem('loggedInUser', JSON.stringify(user));
+                localStorage.setItem('loggedInRole', user.role || 'user');
+                successMessage.textContent = 'Login successful!';
+                successMessage.classList.remove('hidden');
+                console.log('Redirecting to index.html');
+                setTimeout(() => {
+                    window.location.href = '/index.html';
+                }, 1000);
+
+                /* 
+                // FUTURE BACKEND INTEGRATION: Replace hardcoded logic with API call
+                // This fetch logic assumes a backend endpoint at '/api/auth/login'
+                // Expected response: { success: true, user: { name, email, role, profilePicture }, message }
+                async function loginWithBackend() {
+                    const response = await fetch('/api/auth/login', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: JSON.stringify({ email, password }),
+                        credentials: 'include' // Include cookies for session-based auth if needed
+                    });
+
+                    const result = await response.json();
+
+                    if (!response.ok) {
+                        throw new Error(result.message || 'Login failed');
+                    }
+
+                    // Store user data and role from backend response
+                    localStorage.setItem('loggedInUser', JSON.stringify(result.user));
+                    localStorage.setItem('loggedInRole', result.user.role);
+
+                    // Show success message
+                    successMessage.textContent = `Login successful as ${result.user.name}!`;
+                    successMessage.classList.remove('hidden');
+
+                    // Redirect based on user role
+                    setTimeout(() => {
+                        if (result.user.role === 'owner') {
+                            console.log('Redirecting to owner.html');
+                            window.location.href = '/owner.html';
+                        } else if (result.user.role === 'admin') {
+                            console.log('Redirecting to admin.html');
+                            window.location.href = '/admin.html';
+                        } else {
+                            console.log('Redirecting to index.html');
+                            window.location.href = '/index.html';
+                        }
+                    }, 1000);
+                }
+                // Uncomment and call loginWithBackend() when backend is ready
+                // loginWithBackend();
+                */
+
+            } catch (error) {
+                // Handle errors (invalid credentials, network issues, etc.)
+                console.error('Login error:', error.message);
+                document.getElementById('loginPasswordError').textContent = error.message;
+                document.getElementById('loginPasswordError').classList.remove('hidden');
+            } finally {
+                // Reset button state
+                loginButton.disabled = false;
+                buttonText.textContent = 'Log In';
+                loadingSpinner.classList.add('hidden');
+                console.log('Login process completed');
+            }
+        });
+    </script>
+</body>
+
+</html>
