@@ -65,13 +65,21 @@ async function checkAuth(authElements, dashboardElements) {
                     updateDashboard(dashboardElements);
                 }
                 return true;
+            } else {
+                console.warn('User is not an owner or missing email:', data);
             }
+        } else if (response.status === 403) {
+            console.warn('Forbidden: User does not have owner access');
+            showToast(dashboardElements, 'Error', 'You do not have owner access.', 'error');
+        } else {
+            console.warn('Auth check failed with status:', response.status);
         }
         loginSection.classList.remove('hidden');
         dashboardSection.classList.add('hidden');
         return false;
     } catch (err) {
         console.error('Error checking auth:', err);
+        showToast(dashboardElements, 'Error', 'Failed to authenticate. Please try again.', 'error');
         loginSection.classList.remove('hidden');
         dashboardSection.classList.add('hidden');
         return false;
@@ -81,25 +89,33 @@ async function checkAuth(authElements, dashboardElements) {
 // Fetch users from backend
 async function fetchUsers(dashboardElements) {
     try {
-        const response = await fetch('/api/users', {
+        const response = await fetch('/api/owner/users', {
             method: 'GET',
             credentials: 'include',
         });
-        if (response.ok) {
-            const data = await response.json();
-            users = []; // Clear existing users to avoid stale data
-            users = data.users || [];
-            filteredUsers = [...users];
-            console.log('Fetched users:', users); // Debug: Log fetched users
-            updateDashboard(dashboardElements);
-        } else {
-            const errorData = await response.json();
+
+        if (!response.ok) {
+            let errorData;
+            try {
+                errorData = await response.json();
+            } catch (e) {
+                errorData = { message: `HTTP ${response.status}: Failed to fetch users.` };
+                console.error('Non-JSON response received:', await response.text());
+            }
             console.error('Failed to fetch users:', response.status, errorData);
             showToast(dashboardElements, 'Error', errorData.message || 'Failed to fetch users.', 'error');
+            return;
         }
+
+        const data = await response.json();
+        users = []; // Clear existing users to avoid stale data
+        users = data.users || [];
+        filteredUsers = [...users];
+        console.log('Fetched users:', users); // Debug: Log fetched users
+        updateDashboard(dashboardElements);
     } catch (err) {
         console.error('Error fetching users:', err);
-        showToast(dashboardElements, 'Error', 'Failed to fetch users.', 'error');
+        showToast(dashboardElements, 'Error', 'Failed to fetch users. Please check your connection.', 'error');
     }
 }
 
@@ -404,6 +420,11 @@ async function openEditModal(userId, dashboardElements) {
             method: 'GET',
             credentials: 'include',
         });
+        if (!response.ok) {
+            console.error('Failed to fetch current user:', response.status);
+            showToast(dashboardElements, 'Error', 'Failed to verify user. Please log in again.', 'error');
+            return;
+        }
         const data = await response.json();
         const loggedInUser = data.user;
         const isOwnerEditingSelf = user && loggedInUser.id == user.id; // Use id for comparison
@@ -454,7 +475,7 @@ async function openEditModal(userId, dashboardElements) {
                 editRole.disabled = false;
                 editRole.classList.remove('bg-gray-100', 'cursor-not-allowed');
                 const ownerNote = editUserModal.querySelector('.owner-restriction-note');
-                if (note) note.remove();
+                if (ownerNote) ownerNote.remove();
             }
 
             editUserModal.classList.remove('hidden');
@@ -470,7 +491,7 @@ async function openEditModal(userId, dashboardElements) {
 // Demote user (admin or moderator) to regular user
 async function demoteUser(userId, fromRole, dashboardElements) {
     try {
-        const response = await fetch(`/api/users/demote`, {
+        const response = await fetch('/api/owner/users/demote', {
             method: 'PATCH',
             headers: {
                 'Content-Type': 'application/json',
@@ -479,14 +500,15 @@ async function demoteUser(userId, fromRole, dashboardElements) {
             credentials: 'include',
         });
 
-        if (response.ok) {
-            await fetchUsers(dashboardElements);
-            showToast(dashboardElements, 'User Demoted', `User has been demoted to a regular user.`, 'success');
-        } else {
+        if (!response.ok) {
             const data = await response.json();
             console.error('Demote user failed:', response.status, data);
             showToast(dashboardElements, 'Error', data.message || 'Failed to demote user.', 'error');
+            return;
         }
+
+        await fetchUsers(dashboardElements);
+        showToast(dashboardElements, 'User Demoted', `User has been demoted to a regular user.`, 'success');
     } catch (err) {
         console.error('Error demoting user:', err);
         showToast(dashboardElements, 'Error', 'Failed to demote user.', 'error');
@@ -498,7 +520,7 @@ async function demoteToGuest(userId, dashboardElements) {
     try {
         const payload = { id: userId, role: 'guest', email: null, name: null };
         console.log('Demote to guest payload:', payload); // Debug: Log payload
-        const response = await fetch(`/api/users`, {
+        const response = await fetch('/api/owner/users', {
             method: 'PATCH',
             headers: {
                 'Content-Type': 'application/json',
@@ -507,14 +529,15 @@ async function demoteToGuest(userId, dashboardElements) {
             credentials: 'include',
         });
 
-        if (response.ok) {
-            await fetchUsers(dashboardElements);
-            showToast(dashboardElements, 'User Demoted', 'User has been demoted to a guest.', 'success');
-        } else {
+        if (!response.ok) {
             const data = await response.json();
             console.error('Demote to guest failed:', response.status, data);
             showToast(dashboardElements, 'Error', data.message || 'Failed to demote user to guest.', 'error');
+            return;
         }
+
+        await fetchUsers(dashboardElements);
+        showToast(dashboardElements, 'User Demoted', 'User has been demoted to a guest.', 'success');
     } catch (err) {
         console.error('Error demoting to guest:', err);
         showToast(dashboardElements, 'Error', 'Failed to demote user to guest.', 'error');
@@ -529,7 +552,7 @@ async function banUser(userId, dashboardElements) {
         return;
     }
     try {
-        const response = await fetch(`/api/users/ban`, {
+        const response = await fetch('/api/owner/users/ban', {
             method: 'PATCH',
             headers: {
                 'Content-Type': 'application/json',
@@ -538,14 +561,15 @@ async function banUser(userId, dashboardElements) {
             credentials: 'include',
         });
 
-        if (response.ok) {
-            await fetchUsers(dashboardElements);
-            showToast(dashboardElements, 'User Banned', 'User has been banned from the platform.', 'success');
-        } else {
+        if (!response.ok) {
             const data = await response.json();
             console.error('Ban user failed:', response.status, data);
             showToast(dashboardElements, 'Error', data.message || 'Failed to ban user.', 'error');
+            return;
         }
+
+        await fetchUsers(dashboardElements);
+        showToast(dashboardElements, 'User Banned', 'User has been banned from the platform.', 'success');
     } catch (err) {
         console.error('Error banning user:', err);
         showToast(dashboardElements, 'Error', 'Failed to ban user.', 'error');
@@ -560,7 +584,7 @@ async function unbanUser(userId, dashboardElements) {
         return;
     }
     try {
-        const response = await fetch(`/api/users/unban`, {
+        const response = await fetch('/api/owner/users/unban', {
             method: 'PATCH',
             headers: {
                 'Content-Type': 'application/json',
@@ -569,14 +593,15 @@ async function unbanUser(userId, dashboardElements) {
             credentials: 'include',
         });
 
-        if (response.ok) {
-            await fetchUsers(dashboardElements);
-            showToast(dashboardElements, 'User Unbanned', 'User has been unbanned and can now access their account.', 'success');
-        } else {
+        if (!response.ok) {
             const data = await response.json();
             console.error('Unban user failed:', response.status, data);
             showToast(dashboardElements, 'Error', data.message || 'Failed to unban user.', 'error');
+            return;
         }
+
+        await fetchUsers(dashboardElements);
+        showToast(dashboardElements, 'User Unbanned', 'User has been unbanned and can now access their account.', 'success');
     } catch (err) {
         console.error('Error unbanning user:', err);
         showToast(dashboardElements, 'Error', 'Failed to unban user.', 'error');
@@ -591,7 +616,7 @@ async function deleteUser(userId, dashboardElements) {
         return;
     }
     try {
-        const response = await fetch(`/api/users`, {
+        const response = await fetch('/api/owner/users', {
             method: 'DELETE',
             headers: {
                 'Content-Type': 'application/json',
@@ -600,14 +625,15 @@ async function deleteUser(userId, dashboardElements) {
             credentials: 'include',
         });
 
-        if (response.ok) {
-            await fetchUsers(dashboardElements);
-            showToast(dashboardElements, 'User Deleted', 'User has been permanently deleted.', 'success');
-        } else {
+        if (!response.ok) {
             const data = await response.json();
             console.error('Delete user failed:', response.status, data);
             showToast(dashboardElements, 'Error', data.message || 'Failed to delete user.', 'error');
+            return;
         }
+
+        await fetchUsers(dashboardElements);
+        showToast(dashboardElements, 'User Deleted', 'User has been permanently deleted.', 'success');
     } catch (err) {
         console.error('Error deleting user:', err);
         showToast(dashboardElements, 'Error', 'Failed to delete user.', 'error');
@@ -722,7 +748,7 @@ async function submitUserEdit(userId, dashboardElements) {
 
         console.log('Submitting user edit payload:', payload); // Debug: Log payload
 
-        const response = await fetch(`/api/users`, {
+        const response = await fetch('/api/owner/users', {
             method: 'PATCH',
             headers: {
                 'Content-Type': 'application/json',
@@ -731,22 +757,23 @@ async function submitUserEdit(userId, dashboardElements) {
             credentials: 'include',
         });
 
-        if (response.ok) {
-            await fetchUsers(dashboardElements);
-            editUserModal.classList.add('hidden');
-            const user = users.find(u => u.id == userId);
-            console.log('User after update:', user); // Debug: Log updated user
-            showToast(
-                dashboardElements,
-                'User Updated',
-                payload.role === 'guest' ? 'User has been demoted to a guest.' : 'User details have been updated successfully.',
-                'success'
-            );
-        } else {
+        if (!response.ok) {
             const data = await response.json();
             console.error('User edit failed:', response.status, data);
             showToast(dashboardElements, 'Error', data.message || 'Failed to update user.', 'error');
+            return;
         }
+
+        await fetchUsers(dashboardElements);
+        editUserModal.classList.add('hidden');
+        const user = users.find(u => u.id == userId);
+        console.log('User after update:', user); // Debug: Log updated user
+        showToast(
+            dashboardElements,
+            'User Updated',
+            payload.role === 'guest' ? 'User has been demoted to a guest.' : 'User details have been updated successfully.',
+            'success'
+        );
     } catch (err) {
         console.error('Error updating user:', err);
         showToast(dashboardElements, 'Error', 'Failed to update user.', 'error');
@@ -856,10 +883,15 @@ document.addEventListener('DOMContentLoaded', () => {
     if (dashboardElements.mobileLogout) {
         dashboardElements.mobileLogout.addEventListener('click', async () => {
             try {
-                await fetch('/api/owner/logout', {
+                const response = await fetch('/api/owner/logout', {
                     method: 'POST',
                     credentials: 'include',
                 });
+                if (!response.ok) {
+                    console.error('Logout failed:', response.status);
+                    showToast(dashboardElements, 'Error', 'Failed to log out.', 'error');
+                    return;
+                }
                 await checkAuth(authElements, dashboardElements);
                 dashboardElements.mobileMenu.classList.add('hidden');
             } catch (err) {
@@ -964,10 +996,15 @@ document.addEventListener('DOMContentLoaded', () => {
     if (dashboardElements.logoutButton) {
         dashboardElements.logoutButton.addEventListener('click', async () => {
             try {
-                await fetch('/api/owner/logout', {
+                const response = await fetch('/api/owner/logout', {
                     method: 'POST',
                     credentials: 'include',
                 });
+                if (!response.ok) {
+                    console.error('Logout failed:', response.status);
+                    showToast(dashboardElements, 'Error', 'Failed to log out.', 'error');
+                    return;
+                }
                 await checkAuth(authElements, dashboardElements);
             } catch (err) {
                 console.error('Logout error:', err);

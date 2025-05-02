@@ -204,6 +204,27 @@
             } catch (error) {
                 console.warn('Failed to fetch profile data:', error);
             }
+
+            // Add logout button handler
+            const logoutButton = document.getElementById('logoutButton');
+            if (logoutButton) {
+                logoutButton.addEventListener('click', async () => {
+                    try {
+                        const response = await fetch('/logout', {
+                            method: 'POST',
+                            credentials: 'include'
+                        });
+
+                        if (response.ok) {
+                            window.location.href = '/'; // Redirect to home page after logout
+                        } else {
+                            console.error('Logout failed');
+                        }
+                    } catch (error) {
+                        console.error('Error during logout:', error);
+                    }
+                });
+            }
         });
     </script>
     <div id="createPostModal"
