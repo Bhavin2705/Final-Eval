@@ -45,6 +45,7 @@
             width: 100%;
             margin: 0 auto;
             padding: 2rem 1rem;
+            position: relative;
         }
 
         /* Profile Header */
@@ -307,6 +308,38 @@
             color: var(--text-color);
         }
 
+        /* Back to Home Button */
+        .back-home-button {
+            position: absolute;
+            top: 1rem;
+            right: -10rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.25rem;
+            background: linear-gradient(45deg, var(--primary-color), var(--primary-hover));
+            color: white;
+            border: none;
+            border-radius: 2rem;
+            /* Rounded button */
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+            box-shadow: var(--shadow-md);
+        }
+
+        .back-home-button:hover {
+            background: linear-gradient(45deg, var(--primary-hover), var(--primary-color));
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .back-home-button:active {
+            transform: translateY(0);
+            box-shadow: var(--shadow-sm);
+        }
+
         /* Password requirements */
         .requirements-title {
             font-size: 0.875rem;
@@ -382,6 +415,13 @@
             .icon-button {
                 width: 2rem;
                 height: 2rem;
+            }
+
+            .back-home-button {
+                padding: 0.5rem 1rem;
+                font-size: 0.875rem;
+                top: 0.75rem;
+                right: 2rem;
             }
         }
 
@@ -468,6 +508,13 @@
             .icon-button {
                 width: 1.75rem;
                 height: 1.75rem;
+            }
+
+            .back-home-button {
+                padding: 0.4rem 0.75rem;
+                font-size: 0.75rem;
+                top: 0.5rem;
+                right: 0.5rem;
             }
 
             .requirements-title {
@@ -558,6 +605,13 @@
                 height: 1.5rem;
             }
 
+            .back-home-button {
+                padding: 0.3rem 0.5rem;
+                font-size: 0.7rem;
+                top: 0.25rem;
+                right: 0.25rem;
+            }
+
             .requirements-title {
                 font-size: 0.7rem;
             }
@@ -572,6 +626,11 @@
 
 <body>
     <div class="container">
+        <button class="back-home-button" id="back-home-button">
+            <i class="fas fa-home"></i>
+            Back to Home
+            <i class="fas fa-arrow-right"></i>
+        </button>
         <div class="profile-header">
             <div class="profile-avatar-container">
                 <div class="profile-avatar">
@@ -821,31 +880,40 @@
                 if (!file) return;
 
                 try {
-                    // Validate file size (1MB max, as per upload-hint)
+                    // Validate file size (1MB max)
                     if (file.size > 1024 * 1024) {
                         throw new Error('File size exceeds 1MB limit');
                     }
 
-                    // Convert file to Base64
-                    const reader = new FileReader();
-                    reader.readAsDataURL(file);
-                    reader.onload = () => {
-                        const base64Image = reader.result;
+                    // Create form data
+                    const formData = new FormData();
+                    formData.append('profilePhoto', file);
 
-                        // Store in localStorage
-                        try {
-                            localStorage.setItem('profilePicture', base64Image);
-                        } catch (error) {
-                            throw new Error('Failed to store image in localStorage: Storage may be full');
-                        }
+                    // Send to server
+                    const response = await fetch('/api/profile/photo', {
+                        method: 'POST',
+                        body: formData,
+                        credentials: 'include'
+                    });
 
-                        // Update profile image
-                        profileImage.src = base64Image;
-                        alert('Profile picture updated successfully!');
-                    };
-                    reader.onerror = () => {
-                        throw new Error('Failed to read image file');
-                    };
+                    if (!response.ok) {
+                        const error = await response.json();
+                        throw new Error(error.message || 'Failed to upload photo');
+                    }
+
+                    const data = await response.json();
+
+                    // Update profile image
+                    profileImage.src = data.photoUrl;
+
+                    // Store in localStorage as fallback
+                    try {
+                        localStorage.setItem('profilePicture', data.photoUrl);
+                    } catch (error) {
+                        console.warn('Failed to store profile picture URL in localStorage');
+                    }
+
+                    alert('Profile picture updated successfully!');
                 } catch (error) {
                     console.error('Error uploading profile picture:', error);
                     alert(`Failed to upload profile picture: ${error.message}`);
@@ -959,6 +1027,12 @@
                     console.error('Error updating password:', error);
                     alert(`Failed to update password: ${error.message}`);
                 }
+            });
+
+            // Handle back to home button click
+            const backHomeButton = document.getElementById('back-home-button');
+            backHomeButton.addEventListener('click', () => {
+                window.location.replace('/'); // Redirect to home route and force reload
             });
         });
     </script>

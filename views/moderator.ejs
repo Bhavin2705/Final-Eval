@@ -220,7 +220,7 @@
                     </a></li>
                 <li><button id="mobile-logout" class="flex items-center py-2 text-red-600 hover:text-red-700">
                         <i class="fas fa-sign-out-alt mr-2"></i> Logout
-                    </button></li> 
+                    </button></li>
             </ul>
         </div>
     </div>
@@ -710,7 +710,7 @@
             id: 'mod123',
             password: 'mod123'
         };
-
+l
         // Initialize localStorage if needed
         function initializeLocalStorage() {
             if (!localStorage.getItem('users')) {
@@ -1426,20 +1426,38 @@
             });
 
             // Warning modal
-            warningForm.addEventListener('submit', (e) => {
+            warningForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
 
                 const userId = warningUserId.value;
                 const reason = warningReason.value;
                 const message = warningMessage.value;
 
-                // if (!message.trim()) {
-                //     showToast('Error', 'Please provide a warning message.', 'error');
-                //     return;
-                // }
+                if (!message.trim()) {
+                    showToast('Error', 'Please provide a warning message.', 'error');
+                    return;
+                }
 
-                issueWarning(userId, reason, message);
-                warningModal.classList.add('hidden');
+                try {
+                    // First validate the user exists
+                    const users = getUsers();
+                    const userExists = users.find(u => u.id.toString() === userId);
+
+                    if (!userExists) {
+                        throw new Error('User not found');
+                    }
+
+                    // Issue the warning with error handling
+                    await issueWarning(userId, reason, message);
+                    warningModal.classList.add('hidden');
+                    showToast('Success', 'Warning issued successfully', 'success');
+
+                    // Update the UI
+                    updateDashboard();
+                } catch (error) {
+                    console.error('Error issuing warning:', error);
+                    showToast('Error', error.message || 'Failed to issue warning', 'error');
+                }
             });
 
             cancelWarning.addEventListener('click', () => {

@@ -18,7 +18,7 @@ const mimeTypes = require('./config/mime');
 
 const app = express();
 const PORT = process.env.PORT || 7000;
-const MONGO_URI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/socialweb';
+const MONGO_URI = 'mongodb://127.0.0.1:27017/socialweb';
 
 // Connect to MongoDB
 mongoose.connect(MONGO_URI)
@@ -27,7 +27,7 @@ mongoose.connect(MONGO_URI)
 
 // Enable CORS with specific origins
 app.use(cors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+    origin: process.env.FRONTEND_URL || 'http://localhost:3000/socialweb',
     credentials: true
 }));
 
@@ -55,7 +55,7 @@ const storage = multer.diskStorage({
     },
     filename: (req, file, cb) => {
         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        cb(null, uniqueSuffix + path.extname(file.originalName));
+        cb(null, uniqueSuffix + path.extname(file.originalname)); // Fixed: originalname instead of originalName
     }
 });
 const upload = multer({
@@ -154,6 +154,32 @@ const checkModAuth = async (req, res, next) => {
     }
     res.status(403).json({ message: 'Forbidden: Moderator access required' });
 };
+
+// Profile photo upload endpoint
+app.post('/api/profile/photo', checkAuth, upload.single('profilePhoto'), async (req, res, next) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ message: 'No photo uploaded' });
+        }
+
+        const user = await userModel.findByIdAndUpdate(
+            req.session.userId,
+            { profilePhoto: `/uploads/${req.file.filename}` },
+            { new: true }
+        );
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        res.json({
+            message: 'Profile photo updated',
+            photoUrl: `/uploads/${req.file.filename}`
+        });
+    } catch (err) {
+        next(err);
+    }
+});
 
 // Validate ObjectId
 const validateObjectId = (id, res) => {

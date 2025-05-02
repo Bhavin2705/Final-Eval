@@ -53,15 +53,25 @@ function debounce(func, wait) {
  * Initialize the sidebar with user data and topic list
  */
 async function initializeSidebar() {
-    let user = { name: 'Guest', email: 'guest' }; // Default guest user
+    let user = { name: 'Guest', email: 'guest' };
     try {
         const response = await fetch('/api/me', {
-            credentials: 'include' // Include cookies for session
+            credentials: 'include'
         });
         if (response.ok) {
             const data = await response.json();
             if (data.user) {
-                user = data.user; // { name, email, role }
+                user = data.user;
+                // Update profile photo in left section
+                const profilePhoto = document.querySelector('.profile-container .h-12');
+                if (profilePhoto) {
+                    const img = document.createElement('img');
+                    img.src = data.user.profilePhoto || localStorage.getItem('profilePicture');
+                    img.alt = 'Profile';
+                    img.className = 'w-full h-full rounded-full object-cover';
+                    profilePhoto.innerHTML = '';
+                    profilePhoto.appendChild(img);
+                }
             }
         } else {
             console.warn('Failed to fetch user data:', response.status);
@@ -126,6 +136,21 @@ async function initializeSidebar() {
         console.error('Topics toggle element not found');
     }
 }
+
+// Add event listener for profile photo updates
+window.addEventListener('storage', (e) => {
+    if (e.key === 'profilePicture') {
+        const profilePhoto = document.querySelector('.profile-container .h-12');
+        if (profilePhoto && e.newValue) {
+            const img = document.createElement('img');
+            img.src = e.newValue;
+            img.alt = 'Profile';
+            img.className = 'w-full h-full rounded-full object-cover';
+            profilePhoto.innerHTML = '';
+            profilePhoto.appendChild(img);
+        }
+    }
+});
 
 // Reddit API Functions
 

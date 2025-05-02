@@ -101,11 +101,16 @@
                         </div>
                     </div>
                     <div id="userProfileSection">
-                        <% if (user && user.name !== 'Guest') { %>
+                        <% if (user && user.name !=='Guest' ) { %>
                             <div class="relative">
                                 <button id="profileDropdownButton"
                                     class="flex items-center space-x-2 focus:outline-none">
-                                    <div class="w-8 h-8 rounded-full bg-gray-300"></div>
+                                    <div class="w-8 h-8 rounded-full bg-gray-300" id="profile-image">
+                                        <% if (user && user.profilePhoto) { %>
+                                            <img src="<%= user.profilePhoto %>" alt="Profile"
+                                                class="w-full h-full rounded-full object-cover">
+                                            <% } %>
+                                    </div>
                                     <div class="text-left">
                                         <div class="font-semibold">
                                             <%= user.name %>
@@ -127,52 +132,77 @@
                                     </div>
                                 </div>
                             </div>
-                        <% } else { %>
-                            <a href="/register" id="registerButton"
-                                class="flex items-center space-x-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-2 rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-300 shadow-lg hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transform hover:scale-105">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
-                                </svg>
-                                <span class="font-semibold">Register</span>
-                            </a>
-                        <% } %>
+                            <% } else { %>
+                                <a href="/register" id="registerButton"
+                                    class="flex items-center space-x-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-2 rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-300 shadow-lg hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transform hover:scale-105">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                                    </svg>
+                                    <span class="font-semibold">Register</span>
+                                </a>
+                                <% } %>
                     </div>
                 </div>
             </div>
         </div>
     </header>
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
+        // Fetch and display profile photo on page load
+        document.addEventListener('DOMContentLoaded', async () => {
+            const profileImage = document.getElementById('profile-image');
             const profileDropdownButton = document.getElementById('profileDropdownButton');
             const profileDropdown = document.getElementById('profileDropdown');
-            const logoutButton = document.getElementById('logoutButton');
+
+            // Profile dropdown toggle
             if (profileDropdownButton && profileDropdown) {
-                profileDropdownButton.addEventListener('click', () => {
+                profileDropdownButton.addEventListener('click', (e) => {
+                    e.stopPropagation();
                     profileDropdown.classList.toggle('hidden');
                 });
-                document.addEventListener('click', (event) => {
-                    if (!profileDropdownButton.contains(event.target) && !profileDropdown.contains(event.target)) {
+
+                // Close dropdown when clicking outside
+                document.addEventListener('click', (e) => {
+                    if (!profileDropdownButton.contains(e.target) && !profileDropdown.contains(e.target)) {
                         profileDropdown.classList.add('hidden');
                     }
                 });
             }
-            if (logoutButton) {
-                logoutButton.addEventListener('click', async () => {
-                    try {
-                        const response = await fetch('/logout', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' }
-                        });
-                        if (response.ok) {
-                            window.location.href = '/';
-                        } else {
-                            console.error('Logout failed');
-                        }
-                    } catch (err) {
-                        console.error('Logout error:', err);
-                    }
+
+            // Display profile photo
+            const storedImage = localStorage.getItem('profilePicture');
+            if (storedImage && profileImage) {
+                const img = profileImage.querySelector('img') || document.createElement('img');
+                img.src = storedImage;
+                img.alt = 'Profile';
+                img.className = 'w-full h-full rounded-full object-cover';
+                if (!profileImage.contains(img)) {
+                    profileImage.appendChild(img);
+                }
+            }
+
+            // Fetch latest profile photo
+            try {
+                const response = await fetch('/api/me', {
+                    method: 'GET',
+                    credentials: 'include'
                 });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.user && data.user.profilePhoto && profileImage) {
+                        const img = profileImage.querySelector('img') || document.createElement('img');
+                        img.src = data.user.profilePhoto;
+                        img.alt = 'Profile';
+                        img.className = 'w-full h-full rounded-full object-cover';
+                        if (!profileImage.contains(img)) {
+                            profileImage.appendChild(img);
+                        }
+                        localStorage.setItem('profilePicture', data.user.profilePhoto);
+                    }
+                }
+            } catch (error) {
+                console.warn('Failed to fetch profile data:', error);
             }
         });
     </script>
@@ -295,7 +325,8 @@
                 </div>
                 <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 mb-6">
                     <div class="flex items-center space-x-4">
-                        <div class="w-10 h-10 rounded-full bg-gray-300"></div>
+                        <img id="create-post-profile-img" src="https://via.placeholder.com/64" alt="Profile Picture"
+                            class="w-10 h-10 rounded-full object-cover">
                         <button id="create-post-button"
                             class="flex-grow text-left px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
                             What's on your mind?

@@ -42,6 +42,43 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    async function updateProfilePicture() {
+        try {
+            const profileImg = document.getElementById('create-post-profile-img');
+            if (!profileImg) {
+                console.warn('create-post-profile-img element not found');
+                return;
+            }
+
+            // Check localStorage first
+            const storedImage = localStorage.getItem('profilePicture');
+            if (storedImage) {
+                profileImg.src = storedImage;
+                return;
+            }
+
+            // Fetch from /api/me
+            const user = await isUserLoggedIn();
+            if (user && user.profilePhoto) { // Use profilePhoto to match homePage.ejs
+                profileImg.src = user.profilePhoto;
+                try {
+                    localStorage.setItem('profilePicture', user.profilePhoto);
+                } catch (error) {
+                    console.warn('Failed to store profile picture in localStorage:', error);
+                }
+            } else {
+                // Fallback to placeholder
+                profileImg.src = 'https://via.placeholder.com/64';
+            }
+        } catch (error) {
+            console.error('Error updating profile picture:', error);
+            const profileImg = document.getElementById('create-post-profile-img');
+            if (profileImg) {
+                profileImg.src = 'https://via.placeholder.com/64';
+            }
+        }
+    }
+
     function saveCommentsToLocalStorage(postId, comments) {
         console.log(`Saving comments for post ${postId}:`, comments);
         localStorage.setItem(`comments_${postId}`, JSON.stringify(comments));
@@ -697,6 +734,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function init() {
+        updateProfilePicture();
         updateStories();
     }
 
