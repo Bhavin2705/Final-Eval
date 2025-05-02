@@ -125,6 +125,21 @@ const checkOwnerAuth = async (req, res, next) => {
     res.status(403).json({ message: 'Forbidden: Owner access required' });
 };
 
+const checkAdminAuth = async (req, res, next) => {
+    if (req.session.userId) {
+        try {
+            const user = await userModel.findById(req.session.userId);
+            if (user && user.role === 'admin') {
+                req.user = user;
+                return next();
+            }
+        } catch (err) {
+            return next(err);
+        }
+    }
+    res.status(403).json({ message: 'Forbidden: Admin access required' });
+};
+
 const checkModAuth = async (req, res, next) => {
     if (req.session.userId) {
         try {
@@ -173,24 +188,24 @@ app.post('/api/v1/auth/login', async (req, res, next) => {
         if (!email || !password) {
             return res.status(400).json({ message: 'Missing email or password' });
         }
-        const moderator = await userModel.findOne({ email, role: 'moderator' });
-        if (!moderator) {
+        const user = await userModel.findOne({ email });
+        if (!user) {
             return res.status(401).json({ message: 'Invalid credentials' });
         }
-        const isMatch = await bcrypt.compare(password, moderator.password);
+        const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
             return res.status(401).json({ message: 'Invalid credentials' });
         }
-        req.session.userId = moderator._id;
-        await userModel.updateOne({ _id: moderator._id }, { lastLogin: new Date().toISOString() });
+        req.session.userId = user._id;
+        await userModel.updateOne({ _id: user._id }, { lastLogin: new Date().toISOString() });
         res.json({
-            message: 'Moderator login successful',
+            message: 'Login successful',
             token: req.sessionID,
             user: {
-                id: moderator._id,
-                name: moderator.name,
-                email: moderator.email,
-                role: moderator.role
+                id: user._id,
+                name: user.name,
+                email: user.email,
+                role: user.role
             }
         });
     } catch (err) {
@@ -207,16 +222,331 @@ app.post('/api/v1/auth/logout', checkAuth, (req, res, next) => {
     });
 });
 
-// User Routes
-app.get('/api/v1/users', checkModAuth, async (req, res, next) => {
+// Admin Authentication Routes
+app.post('/api/admin/login', async (req, res, next) => {
     try {
-        const users = await userModel.find().select('_id name email status lastLogin createdAt');
+        const { email, password } = req.body;
+        if (!email || !password) {
+            return res.status(400).json({ message: 'Missing email or password' });
+        }
+        const admin = await userModel.findOne({ email, role: 'admin' });
+        if (!admin) {
+            return res.status(401).json({ message: 'Invalid admin credentials' });
+        }
+        const isMatch = await bcrypt.compare(password, admin.password);
+        if (!isMatch) {
+            return res.status(401).json({ message: 'Invalid admin credentials' });
+        }
+        req.session.userId = admin._id;
+        await userModel.updateOne({ _id: admin._id }, { lastLogin: new Date().toISOString() });
+        res.json({
+            message: 'Admin login successful',
+            user: { id: admin._id, name: admin.name, email: admin.email, role: admin.role }
+        });
+    } catch (err) {
+        next(err);
+    }
+});
+
+app.get('/api/admin/me', checkAdminAuth, async (req, res, next) => {
+    try {
+        const user = await userModel.findById(req.session.userId);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        res.json({
+            user: { id: user._id, name: user.name, email: user.email, role: user.role }
+        });
+    } catch (err) {
+        next(err);
+    }
+});
+
+// Moderator Authentication Routes
+app.post('/api/moderator/login', async (req, res, next) => {
+    try {
+        const { email, password } = req.body;
+        if (!email || !password) {
+            return res.status(400).json({ message: 'Missing email or password' });
+        }
+        const moderator = await userModel.findOne({ email, role: 'moderator' });
+        if (!moderator) {
+            return res.status(401).json({ message: 'Invalid moderator credentials' });
+        }
+        const isMatch = await bcrypt.compare(password, moderator.password);
+        if (!isMatch) {
+            return res.status(401).json({ message: 'Invalid moderator credentials' });
+        }
+        req.session.userId = moderator._id;
+        await userModel.updateOne({ _id: moderator._id }, { lastLogin: new Date().toISOString() });
+        res.json({
+            message: 'Moderator login successful',
+            user: { id: moderator._id, name: moderator.name, email: moderator.email, role: moderator.role }
+        });
+    } catch (err) {
+        next(err);
+    }
+});
+
+app.get('/api/moderator/me', checkModAuth, async (req, res, next) => {
+    try {
+        const user = await userModel.findById(req.session.userId);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        res.json({
+            user: { id: user._id, name: user.name, email: user.email, role: user.role }
+        });
+    } catch (err) {
+        next(err);
+    }
+});
+
+// Owner Authentication Routes
+app.post('/api/owner/login', async (req, res, next) => {
+    try {
+        const { email, password } = req.body;
+        if (!email || !password) {
+            return res.status(400).json({ message: 'Missing email or password' });
+        }
+        const owner = await userModel.findOne({ email, role: 'owner' });
+        if (!owner) {
+            return res.status(401).json({ message: 'Invalid owner credentials' });
+        }
+        const isMatch = await bcrypt.compare(password, owner.password);
+        if (!isMatch) {
+            return res.status(401).json({ message: 'Invalid owner credentials' });
+        }
+        req.session.userId = owner._id;
+        await userModel.updateOne({ _id: owner._id }, { lastLogin: new Date().toISOString() });
+        res.json({
+            message: 'Owner login successful',
+            user: { id: owner._id, name: owner.name, email: owner.email, role: owner.role }
+        });
+    } catch (err) {
+        next(err);
+    }
+});
+
+app.get('/api/owner/me', checkOwnerAuth, async (req, res, next) => {
+    try {
+        const user = await userModel.findById(req.session.userId);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        res.json({
+            user: { id: user._id, name: user.name, email: user.email, role: user.role }
+        });
+    } catch (err) {
+        next(err);
+    }
+});
+
+// Admin Routes
+app.post('/api/admin/users', checkAdminAuth, async (req, res, next) => {
+    try {
+        const { name, email, role, password } = req.body;
+        if (!name || !email || !role || !password) {
+            return res.status(400).json({ message: 'Missing required fields' });
+        }
+        if (!['moderator', 'user'].includes(role)) {
+            return res.status(400).json({ message: 'Admins can only create moderators or users' });
+        }
+        const existingUser = await userModel.findOne({ email });
+        if (existingUser) {
+            return res.status(400).json({ message: 'User already exists' });
+        }
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
+        const newUser = await userModel.create({
+            name,
+            email,
+            password: hashedPassword,
+            role,
+            status: 'active',
+            lastLogin: new Date().toISOString(),
+            createdAt: new Date().toISOString()
+        });
+        res.status(201).json({
+            user: {
+                id: newUser._id,
+                name: newUser.name,
+                email: newUser.email,
+                role: newUser.role,
+                status: newUser.status,
+                lastLogin: newUser.lastLogin
+            }
+        });
+    } catch (err) {
+        next(err);
+    }
+});
+
+app.get('/api/admin/users', checkAdminAuth, async (req, res, next) => {
+    try {
+        const users = await userModel.find({ role: { $in: ['moderator', 'user'] } })
+            .select('_id name email role status lastLogin');
+        res.json({
+            users: users.map(user => ({
+                id: user._id,
+                name: user.name || (user.role === 'guest' ? 'Guest' : user.name),
+                email: user.email || (user.role === 'guest' ? 'N/A' : user.email),
+                role: user.role,
+                status: user.status || 'active',
+                lastLogin: user.lastLogin
+            }))
+        });
+    } catch (err) {
+        next(err);
+    }
+});
+
+app.patch('/api/admin/users', checkAdminAuth, async (req, res, next) => {
+    try {
+        const { id, name, email, role, status } = req.body;
+        if (!id || !validateObjectId(id, res)) {
+            return;
+        }
+        const user = await userModel.findById(id);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        if (!['moderator', 'user'].includes(user.role)) {
+            return res.status(403).json({ message: 'Admins can only modify moderators or users' });
+        }
+        const updateData = {};
+        if (name !== undefined) updateData.name = name;
+        if (email !== undefined) {
+            if (email && email !== 'N/A') {
+                const existingUser = await userModel.findOne({ email, _id: { $ne: id } });
+                if (existingUser) {
+                    return res.status(400).json({ message: 'Email already in use' });
+                }
+                updateData.email = email;
+            }
+        }
+        if (role && ['moderator', 'user'].includes(role)) {
+            updateData.role = role;
+        }
+        if (status && ['active', 'inactive', 'banned'].includes(status)) {
+            updateData.status = status;
+        }
+        const updatedUser = await userModel.findByIdAndUpdate(id, updateData, { new: true });
+        if (!updatedUser) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        res.json({
+            user: {
+                id: updatedUser._id,
+                name: updatedUser.name,
+                email: updatedUser.email,
+                role: updatedUser.role,
+                status: updatedUser.status || 'active',
+                lastLogin: updatedUser.lastLogin
+            }
+        });
+    } catch (err) {
+        next(err);
+    }
+});
+
+app.patch('/api/admin/users/ban', checkAdminAuth, async (req, res, next) => {
+    try {
+        const { id } = req.body;
+        if (!id || !validateObjectId(id, res)) {
+            return;
+        }
+        const user = await userModel.findById(id);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        if (!['moderator', 'user'].includes(user.role)) {
+            return res.status(403).json({ message: 'Admins can only ban moderators or users' });
+        }
+        if (user.status === 'banned') {
+            return res.status(400).json({ message: 'User is already banned' });
+        }
+        user.status = 'banned';
+        await user.save();
+        res.json({
+            user: {
+                id: user._id,
+                name: user.name,
+                email: user.email,
+                role: user.role,
+                status: user.status,
+                lastLogin: user.lastLogin
+            }
+        });
+    } catch (err) {
+        next(err);
+    }
+});
+
+app.patch('/api/admin/users/unban', checkAdminAuth, async (req, res, next) => {
+    try {
+        const { id } = req.body;
+        if (!id || !validateObjectId(id, res)) {
+            return;
+        }
+        const user = await userModel.findById(id);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        if (!['moderator', 'user'].includes(user.role)) {
+            return res.status(403).json({ message: 'Admins can only unban moderators or users' });
+        }
+        if (user.status !== 'banned') {
+            return res.status(400).json({ message: 'User is not banned' });
+        }
+        user.status = 'active';
+        await user.save();
+        res.json({
+            user: {
+                id: user._id,
+                name: user.name,
+                email: user.email,
+                role: user.role,
+                status: user.status,
+                lastLogin: user.lastLogin
+            }
+        });
+    } catch (err) {
+        next(err);
+    }
+});
+
+app.delete('/api/admin/users', checkAdminAuth, async (req, res, next) => {
+    try {
+        const { id } = req.body;
+        if (!id || !validateObjectId(id, res)) {
+            return;
+        }
+        const user = await userModel.findById(id);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        if (!['moderator', 'user'].includes(user.role)) {
+            return res.status(403).json({ message: 'Admins can only delete moderators or users' });
+        }
+        await userModel.deleteOne({ _id: id });
+        res.json({ message: 'User deleted' });
+    } catch (err) {
+        next(err);
+    }
+});
+
+// Moderator Routes
+app.get('/api/moderator/users', checkModAuth, async (req, res, next) => {
+    try {
+        const users = await userModel.find({ role: 'user' })
+            .select('_id name email status lastLogin createdAt');
         const usersWithReports = await Promise.all(users.map(async (user) => {
             const reports = await reportModel.find({ userId: user._id, status: 'pending' });
             return {
                 id: user._id,
                 name: user.name,
-                email: user.email || (user.role === 'guest' ? 'N/A' : user.email),
+                email: user.email,
                 status: user.status || 'active',
                 lastActive: user.lastLogin || 'Unknown',
                 reports: reports.length,
@@ -229,19 +559,19 @@ app.get('/api/v1/users', checkModAuth, async (req, res, next) => {
     }
 });
 
-app.get('/api/v1/users/:id', checkModAuth, async (req, res, next) => {
+app.get('/api/moderator/users/:id', checkModAuth, async (req, res, next) => {
     try {
         const { id } = req.params;
         if (!validateObjectId(id, res)) return;
         const user = await userModel.findById(id).select('_id name email status lastLogin createdAt');
-        if (!user) {
-            return res.status(404).json({ message: 'User not found' });
+        if (!user || user.role !== 'user') {
+            return res.status(404).json({ message: 'User not found or not a regular user' });
         }
         const reports = await reportModel.find({ userId: id, status: 'pending' });
         res.json({
             id: user._id,
             name: user.name,
-            email: user.email || (user.role === 'guest' ? 'N/A' : user.email),
+            email: user.email,
             status: user.status || 'active',
             lastActive: user.lastLogin || 'Unknown',
             reports: reports.length,
@@ -252,8 +582,7 @@ app.get('/api/v1/users/:id', checkModAuth, async (req, res, next) => {
     }
 });
 
-// Report Routes
-app.get('/api/v1/reports', checkModAuth, async (req, res, next) => {
+app.get('/api/moderator/reports', checkModAuth, async (req, res, next) => {
     try {
         const { userId, status } = req.query;
         const query = {};
@@ -281,7 +610,7 @@ app.get('/api/v1/reports', checkModAuth, async (req, res, next) => {
     }
 });
 
-app.get('/api/v1/reports/:id', checkModAuth, async (req, res, next) => {
+app.get('/api/moderator/reports/:id', checkModAuth, async (req, res, next) => {
     try {
         const { id } = req.params;
         if (!validateObjectId(id, res)) return;
@@ -305,7 +634,7 @@ app.get('/api/v1/reports/:id', checkModAuth, async (req, res, next) => {
     }
 });
 
-app.patch('/api/v1/reports/:id', checkModAuth, async (req, res, next) => {
+app.patch('/api/moderator/reports/:id', checkModAuth, async (req, res, next) => {
     try {
         const { id } = req.params;
         const { status, resolvedDate } = req.body;
@@ -327,7 +656,7 @@ app.patch('/api/v1/reports/:id', checkModAuth, async (req, res, next) => {
     }
 });
 
-app.post('/api/v1/reports/:id/remove', checkModAuth, async (req, res, next) => {
+app.post('/api/moderator/reports/:id/remove', checkModAuth, async (req, res, next) => {
     try {
         const { id } = req.params;
         const { status, resolvedDate, resolution } = req.body;
@@ -350,16 +679,15 @@ app.post('/api/v1/reports/:id/remove', checkModAuth, async (req, res, next) => {
     }
 });
 
-// Warning Routes
-app.post('/api/v1/warnings', checkModAuth, async (req, res, next) => {
+app.post('/api/moderator/warnings', checkModAuth, async (req, res, next) => {
     try {
         const { userId, reason, message, date } = req.body;
         if (!userId || !reason || !message || !validateObjectId(userId, res)) {
             return res.status(400).json({ message: 'Missing required fields or invalid user ID' });
         }
         const user = await userModel.findById(userId);
-        if (!user) {
-            return res.status(404).json({ message: 'User not found' });
+        if (!user || user.role !== 'user') {
+            return res.status(404).json({ message: 'User not found or not a regular user' });
         }
         const warning = await warningModel.create({
             userId,
@@ -373,7 +701,7 @@ app.post('/api/v1/warnings', checkModAuth, async (req, res, next) => {
     }
 });
 
-app.get('/api/v1/warnings', checkModAuth, async (req, res, next) => {
+app.get('/api/moderator/warnings', checkModAuth, async (req, res, next) => {
     try {
         const { userId } = req.query;
         const query = userId && validateObjectId(userId, res) ? { userId } : {};
@@ -392,8 +720,309 @@ app.get('/api/v1/warnings', checkModAuth, async (req, res, next) => {
     }
 });
 
-// Existing Routes (Updated for Compatibility)
-app.get(['/', '/register', '/login', '/owner', '/moderator'], async (req, res, next) => {
+app.patch('/api/moderator/users/ban', checkModAuth, async (req, res, next) => {
+    try {
+        const { id } = req.body;
+        if (!id || !validateObjectId(id, res)) {
+            return;
+        }
+        const user = await userModel.findById(id);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        if (user.role !== 'user') {
+            return res.status(403).json({ message: 'Moderators can only ban regular users' });
+        }
+        if (user.status === 'banned') {
+            return res.status(400).json({ message: 'User is already banned' });
+        }
+        user.status = 'banned';
+        await user.save();
+        res.json({
+            user: {
+                id: user._id,
+                name: user.name,
+                email: user.email,
+                role: user.role,
+                status: user.status,
+                lastLogin: user.lastLogin
+            }
+        });
+    } catch (err) {
+        next(err);
+    }
+});
+
+app.patch('/api/moderator/users/unban', checkModAuth, async (req, res, next) => {
+    try {
+        const { id } = req.body;
+        if (!id || !validateObjectId(id, res)) {
+            return;
+        }
+        const user = await userModel.findById(id);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        if (user.role !== 'user') {
+            return res.status(403).json({ message: 'Moderators can only unban regular users' });
+        }
+        if (user.status !== 'banned') {
+            return res.status(400).json({ message: 'User is not banned' });
+        }
+        user.status = 'active';
+        await user.save();
+        res.json({
+            user: {
+                id: user._id,
+                name: user.name,
+                email: user.email,
+                role: user.role,
+                status: user.status,
+                lastLogin: user.lastLogin
+            }
+        });
+    } catch (err) {
+        next(err);
+    }
+});
+
+// Owner Routes
+app.post('/api/owner/users', checkOwnerAuth, async (req, res, next) => {
+    try {
+        const { name, email, role, password } = req.body;
+        if (!name || !email || !role || !password) {
+            return res.status(400).json({ message: 'Missing required fields' });
+        }
+        if (!['owner', 'admin', 'moderator', 'user'].includes(role)) {
+            return res.status(400).json({ message: 'Invalid role' });
+        }
+        const existingUser = await userModel.findOne({ email });
+        if (existingUser) {
+            return res.status(400).json({ message: 'User already exists' });
+        }
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
+        const newUser = await userModel.create({
+            name,
+            email,
+            password: hashedPassword,
+            role,
+            status: 'active',
+            lastLogin: new Date().toISOString(),
+            createdAt: new Date().toISOString()
+        });
+        res.status(201).json({
+            user: {
+                id: newUser._id,
+                name: newUser.name,
+                email: newUser.email,
+                role: newUser.role,
+                status: newUser.status,
+                lastLogin: newUser.lastLogin
+            }
+        });
+    } catch (err) {
+        next(err);
+    }
+});
+
+app.get('/api/owner/users', checkOwnerAuth, async (req, res, next) => {
+    try {
+        const users = await userModel.find().select('_id name email role status lastLogin');
+        res.json({
+            users: users.map(user => ({
+                id: user._id,
+                name: user.name || (user.role === 'guest' ? 'Guest' : user.name),
+                email: user.email || (user.role === 'guest' ? 'N/A' : user.email),
+                role: user.role,
+                status: user.status || 'active',
+                lastLogin: user.lastLogin
+            }))
+        });
+    } catch (err) {
+        next(err);
+    }
+});
+
+app.patch('/api/owner/users', checkOwnerAuth, async (req, res, next) => {
+    try {
+        const { id, name, email, role, status } = req.body;
+        if (!id || !validateObjectId(id, res)) {
+            return;
+        }
+        const user = await userModel.findById(id);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        if (id === req.session.userId && user.role === 'owner' && role && role !== 'owner') {
+            return res.status(403).json({ message: 'You cannot change your own owner role' });
+        }
+        const updateData = {};
+        if (name !== undefined) updateData.name = name || (role === 'guest' ? 'Guest' : name);
+        if (email !== undefined) {
+            if (email && email !== 'N/A') {
+                const existingUser = await userModel.findOne({ email, _id: { $ne: id } });
+                if (existingUser) {
+                    return res.status(400).json({ message: 'Email already in use' });
+                }
+                updateData.email = email;
+            } else {
+                updateData.email = role === 'guest' ? 'N/A' : null;
+            }
+        }
+        if (role && ['owner', 'admin', 'moderator', 'user', 'guest'].includes(role)) {
+            updateData.role = role;
+            if (role === 'guest') {
+                updateData.email = 'N/A';
+                updateData.name = 'Guest';
+            }
+        }
+        if (status && ['active', 'inactive', 'banned'].includes(status)) {
+            updateData.status = status;
+        }
+        const updatedUser = await userModel.findByIdAndUpdate(id, updateData, { new: true });
+        if (!updatedUser) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        res.json({
+            user: {
+                id: updatedUser._id,
+                name: updatedUser.name || (updatedUser.role === 'guest' ? 'Guest' : updatedUser.name),
+                email: updatedUser.email || (updatedUser.role === 'guest' ? 'N/A' : updatedUser.email),
+                role: updatedUser.role,
+                status: updatedUser.status || 'active',
+                lastLogin: updatedUser.lastLogin
+            }
+        });
+    } catch (err) {
+        next(err);
+    }
+});
+
+app.patch('/api/owner/users/demote', checkOwnerAuth, async (req, res, next) => {
+    try {
+        const { id, fromRole } = req.body;
+        if (!id || !fromRole || !['admin', 'moderator'].includes(fromRole)) {
+            return res.status(400).json({ message: 'Invalid id or fromRole' });
+        }
+        if (!validateObjectId(id, res)) {
+            return;
+        }
+        const user = await userModel.findById(id);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        if (user.role !== fromRole) {
+            return res.status(400).json({ message: `User is not a ${fromRole}` });
+        }
+        if (id === req.session.userId && user.role === 'owner') {
+            return res.status(403).json({ message: 'You cannot demote your own owner account' });
+        }
+        user.role = 'user';
+        await user.save();
+        res.json({
+            user: {
+                id: user._id,
+                name: user.name || (user.role === 'guest' ? 'Guest' : user.name),
+                email: user.email || (user.role === 'guest' ? 'N/A' : user.email),
+                role: user.role,
+                status: user.status || 'active',
+                lastLogin: user.lastLogin
+            }
+        });
+    } catch (err) {
+        next(err);
+    }
+});
+
+app.patch('/api/owner/users/ban', checkOwnerAuth, async (req, res, next) => {
+    try {
+        const { id } = req.body;
+        if (!id || !validateObjectId(id, res)) {
+            return;
+        }
+        const user = await userModel.findById(id);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        if (id === req.session.userId && user.role === 'owner') {
+            return res.status(403).json({ message: 'You cannot ban your own owner account' });
+        }
+        if (user.status === 'banned') {
+            return res.status(400).json({ message: 'User is already banned' });
+        }
+        user.status = 'banned';
+        await user.save();
+        res.json({
+            user: {
+                id: user._id,
+                name: user.name || (user.role === 'guest' ? 'Guest' : user.name),
+                email: user.email || (user.role === 'guest' ? 'N/A' : user.email),
+                role: user.role,
+                status: user.status || 'active',
+                lastLogin: user.lastLogin
+            }
+        });
+    } catch (err) {
+        next(err);
+    }
+});
+
+app.patch('/api/owner/users/unban', checkOwnerAuth, async (req, res, next) => {
+    try {
+        const { id } = req.body;
+        if (!id || !validateObjectId(id, res)) {
+            return;
+        }
+        const user = await userModel.findById(id);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        if (id === req.session.userId && user.role === 'owner') {
+            return res.status(403).json({ message: 'You cannot unban your own owner account' });
+        }
+        if (user.status !== 'banned') {
+            return res.status(400).json({ message: 'User is not banned' });
+        }
+        user.status = 'active';
+        await user.save();
+        res.json({
+            user: {
+                id: user._id,
+                name: user.name || (user.role === 'guest' ? 'Guest' : user.name),
+                email: user.email || (user.role === 'guest' ? 'N/A' : user.email),
+                role: user.role,
+                status: user.status || 'active',
+                lastLogin: user.lastLogin
+            }
+        });
+    } catch (err) {
+        next(err);
+    }
+});
+
+app.delete('/api/owner/users', checkOwnerAuth, async (req, res, next) => {
+    try {
+        const { id } = req.body;
+        if (!id || !validateObjectId(id, res)) {
+            return;
+        }
+        const user = await userModel.findById(id);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        if (id === req.session.userId && user.role === 'owner') {
+            return res.status(403).json({ message: 'You cannot delete your own owner account' });
+        }
+        await userModel.deleteOne({ _id: id });
+        res.json({ message: 'User deleted' });
+    } catch (err) {
+        next(err);
+    }
+});
+
+// General Routes
+app.get(['/', '/register', '/login', '/owner', '/admin', '/moderator'], async (req, res, next) => {
     try {
         const page = req.path === '/' ? 'homePage' : req.path.slice(1);
         if (req.path === '/') {
@@ -431,12 +1060,16 @@ app.get('/bookmarks', checkAuth, (req, res) => {
     res.render('bookmarks.ejs');
 });
 
-app.get('/admin', (req, res) => {
-    res.render('admin.ejs');
+app.get('/admin-dashboard', checkAdminAuth, (req, res) => {
+    res.render('admin-dashboard.ejs');
 });
 
 app.get('/moderator-dashboard', checkModAuth, (req, res) => {
     res.render('moderator-dashboard.ejs');
+});
+
+app.get('/owner-dashboard', checkOwnerAuth, (req, res) => {
+    res.render('owner-dashboard.ejs');
 });
 
 app.get('/api/me', async (req, res, next) => {
@@ -481,56 +1114,6 @@ app.post('/login', async (req, res, next) => {
     }
 });
 
-app.post('/api/owner/login', async (req, res, next) => {
-    try {
-        const { email, password } = req.body;
-        if (!email || !password) {
-            return res.status(400).json({ message: 'Missing email or password' });
-        }
-        const owner = await userModel.findOne({ email, role: 'owner' });
-        if (!owner) {
-            return res.status(401).json({ message: 'Invalid owner credentials' });
-        }
-        const isMatch = await bcrypt.compare(password, owner.password);
-        if (!isMatch) {
-            return res.status(401).json({ message: 'Invalid owner credentials' });
-        }
-        req.session.userId = owner._id;
-        await userModel.updateOne({ _id: owner._id }, { lastLogin: new Date().toISOString() });
-        res.json({
-            message: 'Owner login successful',
-            user: { id: owner._id, name: owner.name, email: owner.email, role: owner.role }
-        });
-    } catch (err) {
-        next(err);
-    }
-});
-
-app.post('/api/moderator/login', async (req, res, next) => {
-    try {
-        const { email, password } = req.body;
-        if (!email || !password) {
-            return res.status(400).json({ message: 'Missing email or password' });
-        }
-        const moderator = await userModel.findOne({ email, role: 'moderator' });
-        if (!moderator) {
-            return res.status(401).json({ message: 'Invalid moderator credentials' });
-        }
-        const isMatch = await bcrypt.compare(password, moderator.password);
-        if (!isMatch) {
-            return res.status(401).json({ message: 'Invalid moderator credentials' });
-        }
-        req.session.userId = moderator._id;
-        await userModel.updateOne({ _id: moderator._id }, { lastLogin: new Date().toISOString() });
-        res.json({
-            message: 'Moderator login successful',
-            user: { id: moderator._id, name: moderator.name, email: moderator.email, role: moderator.role }
-        });
-    } catch (err) {
-        next(err);
-    }
-});
-
 app.post('/logout', (req, res, next) => {
     req.session.destroy(err => {
         if (err) {
@@ -566,261 +1149,6 @@ app.post('/register', async (req, res, next) => {
             message: 'User registered successfully',
             user: { id: newUser._id, name: newUser.name, email: newUser.email, role: newUser.role }
         });
-    } catch (err) {
-        next(err);
-    }
-});
-
-app.get('/api/owner/me', checkOwnerAuth, async (req, res, next) => {
-    try {
-        const user = await userModel.findById(req.session.userId);
-        if (!user) {
-            return res.status(404).json({ message: 'User not found' });
-        }
-        res.json({
-            user: { id: user._id, name: user.name, email: user.email, role: user.role }
-        });
-    } catch (err) {
-        next(err);
-    }
-});
-
-app.post('/api/users', checkOwnerAuth, async (req, res, next) => {
-    try {
-        const { name, email, role, password } = req.body;
-        if (!name || !email || !role || !password) {
-            return res.status(400).json({ message: 'Missing required fields' });
-        }
-        if (!['owner', 'admin', 'moderator', 'user'].includes(role)) {
-            return res.status(400).json({ message: 'Invalid role' });
-        }
-        const existingUser = await userModel.findOne({ email });
-        if (existingUser) {
-            return res.status(400).json({ message: 'User already exists' });
-        }
-        const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(password, salt);
-        const newUser = await userModel.create({
-            name,
-            email,
-            password: hashedPassword,
-            role,
-            status: 'active',
-            lastLogin: new Date().toISOString(),
-            createdAt: new Date().toISOString()
-        });
-        res.status(201).json({
-            user: {
-                id: newUser._id,
-                name: newUser.name,
-                email: newUser.email,
-                role: newUser.role,
-                status: newUser.status,
-                lastLogin: newUser.lastLogin
-            }
-        });
-    } catch (err) {
-        next(err);
-    }
-});
-
-app.get('/api/users', checkOwnerAuth, async (req, res, next) => {
-    try {
-        const users = await userModel.find().select('_id name email role status lastLogin');
-        res.json({
-            users: users.map(user => ({
-                id: user._id,
-                name: user.name || (user.role === 'guest' ? 'Guest' : user.name),
-                email: user.email || (user.role === 'guest' ? 'N/A' : user.email),
-                role: user.role,
-                status: user.status || 'active',
-                lastLogin: user.lastLogin
-            }))
-        });
-    } catch (err) {
-        next(err);
-    }
-});
-
-app.patch('/api/users', checkOwnerAuth, async (req, res, next) => {
-    try {
-        const { id, name, email, role, status } = req.body;
-        if (!id || !validateObjectId(id, res)) {
-            return;
-        }
-        const user = await userModel.findById(id);
-        if (!user) {
-            return res.status(404).json({ message: 'User not found' });
-        }
-        if (id === req.session.userId && user.role === 'owner' && role && role !== 'owner') {
-            console.log(`Owner ${req.session.userId} attempted to change own role to ${role}`);
-            return res.status(403).json({ message: 'You cannot change your own owner role' });
-        }
-        const updateData = {};
-        if (name !== undefined) updateData.name = name || (role === 'guest' ? 'Guest' : name);
-        if (email !== undefined) {
-            if (email && email !== 'N/A') {
-                const existingUser = await userModel.findOne({ email, _id: { $ne: id } });
-                if (existingUser) {
-                    return res.status(400).json({ message: 'Email already in use' });
-                }
-                updateData.email = email;
-            } else {
-                updateData.email = role === 'guest' ? 'N/A' : null;
-            }
-        }
-        if (role && ['owner', 'admin', 'moderator', 'user', 'guest'].includes(role)) {
-            console.log(`Updating user ${id} to role ${role}`);
-            updateData.role = role;
-            if (role === 'guest') {
-                updateData.email = 'N/A';
-                updateData.name = 'Guest';
-            }
-        }
-        if (status && ['active', 'inactive', 'banned'].includes(status)) {
-            updateData.status = status;
-        }
-        const updatedUser = await userModel.findByIdAndUpdate(id, updateData, { new: true });
-        if (!updatedUser) {
-            return res.status(404).json({ message: 'User not found' });
-        }
-        res.json({
-            user: {
-                id: updatedUser._id,
-                name: updatedUser.name || (updatedUser.role === 'guest' ? 'Guest' : updatedUser.name),
-                email: updatedUser.email || (updatedUser.role === 'guest' ? 'N/A' : updatedUser.email),
-                role: updatedUser.role,
-                status: updatedUser.status || 'active',
-                lastLogin: updatedUser.lastLogin
-            }
-        });
-    } catch (err) {
-        console.error(`Error updating user ${req.body.id}:`, err.message);
-        next(err);
-    }
-});
-
-app.patch('/api/users/demote', checkOwnerAuth, async (req, res, next) => {
-    try {
-        const { id, fromRole } = req.body;
-        if (!id || !fromRole || !['admin', 'moderator'].includes(fromRole)) {
-            return res.status(400).json({ message: 'Invalid id or fromRole' });
-        }
-        if (!validateObjectId(id, res)) {
-            return;
-        }
-        const user = await userModel.findById(id);
-        if (!user) {
-            return res.status(404).json({ message: 'User not found' });
-        }
-        if (user.role !== fromRole) {
-            return res.status(400).json({ message: `User is not a ${fromRole}` });
-        }
-        if (id === req.session.userId && user.role === 'owner') {
-            console.log(`Owner ${req.session.userId} attempted to demote themselves`);
-            return res.status(403).json({ message: 'You cannot demote your own owner account' });
-        }
-        user.role = 'user';
-        await user.save();
-        res.json({
-            user: {
-                id: user._id,
-                name: user.name || (user.role === 'guest' ? 'Guest' : user.name),
-                email: user.email || (user.role === 'guest' ? 'N/A' : user.email),
-                role: user.role,
-                status: user.status || 'active',
-                lastLogin: user.lastLogin
-            }
-        });
-    } catch (err) {
-        next(err);
-    }
-});
-
-app.patch('/api/users/ban', checkOwnerAuth, async (req, res, next) => {
-    try {
-        const { id } = req.body;
-        if (!id || !validateObjectId(id, res)) {
-            return;
-        }
-        const user = await userModel.findById(id);
-        if (!user) {
-            return res.status(404).json({ message: 'User not found' });
-        }
-        if (id === req.session.userId && user.role === 'owner') {
-            console.log(`Owner ${req.session.userId} attempted to ban themselves`);
-            return res.status(403).json({ message: 'You cannot ban your own owner account' });
-        }
-        if (user.status === 'banned') {
-            return res.status(400).json({ message: 'User is already banned' });
-        }
-        user.status = 'banned';
-        await user.save();
-        res.json({
-            user: {
-                id: user._id,
-                name: user.name || (user.role === 'guest' ? 'Guest' : user.name),
-                email: user.email || (user.role === 'guest' ? 'N/A' : user.email),
-                role: user.role,
-                status: user.status || 'active',
-                lastLogin: user.lastLogin
-            }
-        });
-    } catch (err) {
-        next(err);
-    }
-});
-
-app.patch('/api/users/unban', checkOwnerAuth, async (req, res, next) => {
-    try {
-        const { id } = req.body;
-        if (!id || !validateObjectId(id, res)) {
-            return;
-        }
-        const user = await userModel.findById(id);
-        if (!user) {
-            return res.status(404).json({ message: 'User not found' });
-        }
-        if (id === req.session.userId && user.role === 'owner') {
-            console.log(`Owner ${req.session.userId} attempted to unban themselves`);
-            return res.status(403).json({ message: 'You cannot unban your own owner account' });
-        }
-        if (user.status !== 'banned') {
-            return res.status(400).json({ message: 'User is not banned' });
-        }
-        user.status = 'active';
-        await user.save();
-        res.json({
-            user: {
-                id: user._id,
-                name: user.name || (user.role === 'guest' ? 'Guest' : user.name),
-                email: user.email || (user.role === 'guest' ? 'N/A' : user.email),
-                role: user.role,
-                status: user.status || 'active',
-                lastLogin: user.lastLogin
-            }
-        });
-    } catch (err) {
-        next(err);
-    }
-});
-
-app.delete('/api/users', checkOwnerAuth, async (req, res, next) => {
-    try {
-        const { id } = req.body;
-        if (!id || !validateObjectId(id, res)) {
-            return;
-        }
-        const user = await userModel.findById(id);
-        if (!user) {
-            return res.status(404).json({ message: 'User not found' });
-        }
-        if (id === req.session.userId && user.role === 'owner') {
-            console.log(`Owner ${req.session.userId} attempted to delete themselves`);
-            return res.status(403).json({ message: 'You cannot delete your own owner account' });
-        }
-        await userModel.deleteOne({ _id: id });
-        res.json({ message: 'User deleted' });
     } catch (err) {
         next(err);
     }

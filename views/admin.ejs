@@ -7,7 +7,8 @@
     <title>Admin Panel - Social</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" />
     <link rel="icon" type="image/png" href="/images/icon.png" />
-    <link rel="stylesheet" href="responsive.css">
+    <link rel="stylesheet" href="/components/css/responsive.css">
+    <link rel="stylesheet" href="/components/css/admin.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -68,60 +69,59 @@
         .gradient-bg {
             background: linear-gradient(135deg, #0ea5e9 0%, #3b82f6 100%);
         }
-        
+
         .card-hover {
             transition: all 0.3s ease;
         }
-        
+
         .card-hover:hover {
             transform: translateY(-5px);
             box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
         }
-        
+
         .table-row-hover:hover {
             background-color: rgba(14, 165, 233, 0.05);
         }
-        
-        /* Custom scrollbar */
+
         ::-webkit-scrollbar {
             width: 8px;
             height: 8px;
         }
-        
+
         ::-webkit-scrollbar-track {
             background: #f1f5f9;
             border-radius: 10px;
         }
-        
+
         ::-webkit-scrollbar-thumb {
             background: #cbd5e1;
             border-radius: 10px;
         }
-        
+
         ::-webkit-scrollbar-thumb:hover {
             background: #94a3b8;
         }
-        
-        /* Animated background */
+
         .animated-gradient {
             background: linear-gradient(-45deg, #0ea5e9, #3b82f6, #f43f5e, #0ea5e9);
             background-size: 400% 400%;
             animation: gradient 15s ease infinite;
         }
-        
+
         @keyframes gradient {
             0% {
                 background-position: 0% 50%;
             }
+
             50% {
                 background-position: 100% 50%;
             }
+
             100% {
                 background-position: 0% 50%;
             }
         }
     </style>
-    <link rel="stylesheet" href="./components/css/navbar.css">
 </head>
 
 <body class="bg-gray-50">
@@ -130,7 +130,8 @@
         <div class="max-w-full mx-8">
             <div class="flex items-center justify-between h-16">
                 <div class="flex items-center space-x-32">
-                    <a href="/" class="text-2xl font-semibold hover:text-secondary-500 transition-colors ml-8 flex items-center">
+                    <a href="/"
+                        class="text-2xl font-semibold hover:text-secondary-500 transition-colors ml-8 flex items-center">
                         <span class="text-primary-600">Social</span>
                         <span class="ml-2 text-xs font-bold bg-blue-500 text-white px-2 py-0.5 rounded-md">ADMIN</span>
                     </a>
@@ -143,7 +144,7 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                         </svg>
-                        <input type="search" id="userSearchInput" placeholder="Search users by name, email, or role..."
+                        <input type="search" id="userSearchInput" placeholder="Search users by name or email..."
                             class="w-full pl-10 pr-4 py-2 bg-gray-100 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all">
                     </div>
                 </div>
@@ -152,30 +153,32 @@
                     <div id="userProfileSection">
                         <div class="relative">
                             <button id="profileDropdownButton" class="flex items-center space-x-2 focus:outline-none">
-                                <div class="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-blue-600 flex items-center justify-center shadow-md">
+                                <div
+                                    class="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-blue-600 flex items-center justify-center shadow-md">
                                     <i class="fas fa-user-shield text-white"></i>
                                 </div>
                                 <div class="text-left">
                                     <div class="font-semibold" id="adminName">Admin</div>
                                     <div class="text-xs text-gray-500">Administrator</div>
                                 </div>
-                                <svg class="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                <svg class="w-4 h-4 text-gray-700" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M19 9l-7 7-7-7" />
                                 </svg>
                             </button>
 
-                            <div id="profileDropdown" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 animate-fade-in">
+                            <div id="profileDropdown"
+                                class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 animate-fade-in">
                                 <div class="p-2">
-                                    <a href="owner.html" class="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md">
-                                        <i class="fas fa-crown mr-2 text-yellow-500"></i>
-                                        Owner Panel
-                                    </a>
-                                    <a href="/" class="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md">
+                                    <a href="/"
+                                        class="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md">
                                         <i class="fas fa-home mr-2 text-primary-500"></i>
                                         Home
                                     </a>
                                     <hr class="my-1 border-gray-200">
-                                    <button id="logoutButton" class="flex items-center w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded-md">
+                                    <button id="logoutButton"
+                                        class="flex items-center w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded-md">
                                         <i class="fas fa-sign-out-alt mr-2"></i>
                                         Logout
                                     </button>
@@ -204,69 +207,75 @@
                 <h2 class="text-xl font-bold text-primary-600">Social Admin</h2>
                 <button id="close-menu" class="text-gray-600">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                        </path>
                     </svg>
                 </button>
             </div>
             <ul class="space-y-4">
                 <li><a href="/" class="flex items-center py-2 text-gray-700 hover:text-primary-500">
-                    <i class="fas fa-home mr-2"></i> Home
-                </a></li>
-                <li><a href="owner.html" class="flex items-center py-2 text-gray-700 hover:text-primary-500">
-                    <i class="fas fa-crown mr-2"></i> Owner Panel
-                </a></li>
+                        <i class="fas fa-home mr-2"></i> Home
+                    </a></li>
                 <li><button id="mobile-logout" class="flex items-center py-2 text-red-600 hover:text-red-700">
-                    <i class="fas fa-sign-out-alt mr-2"></i> Logout
-                </button></li>
+                        <i class="fas fa-sign-out-alt mr-2"></i> Logout
+                    </button></li>
             </ul>
         </div>
     </div>
 
     <!-- Main Content -->
     <main class="container mx-auto py-6 pt-24 px-4">
-        <!-- Login Form (Initially Hidden) -->
-        <div id="loginContainer" class="max-w-md mx-auto bg-white rounded-xl shadow-soft p-8 mt-10 border border-gray-100">
-            <div class="text-center mb-8">
-                <div class="inline-block p-3 rounded-full bg-blue-100 text-blue-600 mb-4">
-                    <i class="fas fa-user-shield text-3xl"></i>
-                </div>
-                <h2 class="text-2xl font-bold text-gray-800">Admin Login</h2>
-                <p class="text-gray-500 mt-2">Enter your credentials to access the admin dashboard</p>
-            </div>
-            <div class="mb-4">
-                <label for="adminId" class="block text-gray-700 mb-2 font-medium">Admin ID</label>
-                <div class="relative">
-                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <i class="fas fa-user text-gray-400"></i>
+        <!-- Login Section -->
+        <div id="loginSection">
+            <div class="max-w-md mx-auto bg-white rounded-xl shadow-soft p-8 mt-10 border border-gray-100">
+                <div class="text-center mb-8">
+                    <div class="inline-block p-3 rounded-full bg-blue-100 text-blue-600 mb-4">
+                        <i class="fas fa-user-shield text-3xl"></i>
                     </div>
-                    <input type="text" id="adminId" class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all">
+                    <h2 class="text-2xl font-bold text-gray-800">Admin Login</h2>
+                    <p class="text-gray-500 mt-2">Enter your credentials to access the admin dashboard</p>
                 </div>
-            </div>
-            <div class="mb-6">
-                <label for="adminPassword" class="block text-gray-700 mb-2 font-medium">Password</label>
-                <div class="relative">
-                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <i class="fas fa-lock text-gray-400"></i>
+                <form id="loginForm">
+                    <div class="mb-4">
+                        <label for="email" class="block text-gray-700 mb-2 font-medium">Email</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fas fa-user text-gray-400"></i>
+                            </div>
+                            <input type="email" id="email" name="email" required
+                                class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all">
+                        </div>
                     </div>
-                    <input type="password" id="adminPassword" class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all">
-                    <div class="absolute inset-y-0 right-0 pr-3 flex items-center">
-                        <button id="togglePassword" type="button" class="text-gray-400 hover:text-gray-600 focus:outline-none">
-                            <i class="fas fa-eye"></i>
-                        </button>
+                    <div class="mb-6">
+                        <label for="password" class="block text-gray-700 mb-2 font-medium">Password</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fas fa-lock text-gray-400"></i>
+                            </div>
+                            <input type="password" id="password" name="password" required
+                                class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all">
+                            <div class="absolute inset-y-0 right-0 pr-3 flex items-center">
+                                <button id="togglePassword" type="button"
+                                    class="text-gray-400 hover:text-gray-600 focus:outline-none">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
                     </div>
-                </div>
+                    <div id="loginError" class="hidden mb-4 p-3 bg-red-50 text-red-600 text-center rounded-lg">
+                        <i class="fas fa-exclamation-circle mr-2"></i>
+                        <span id="errorMessage">Invalid credentials. Please try again.</span>
+                    </div>
+                    <button type="submit"
+                        class="w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white py-2 rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all shadow-md hover:shadow-lg transform hover:scale-[1.02] active:scale-[0.98] font-medium">
+                        <i class="fas fa-sign-in-alt mr-2"></i> Login
+                    </button>
+                </form>
             </div>
-            <div id="loginError" class="hidden mb-4 p-3 bg-red-50 text-red-600 text-center rounded-lg">
-                <i class="fas fa-exclamation-circle mr-2"></i>
-                <span id="errorMessage">Invalid credentials. Please try again.</span>
-            </div>
-            <button id="loginButton" class="w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white py-2 rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all shadow-md hover:shadow-lg transform hover:scale-[1.02] active:scale-[0.98] font-medium">
-                <i class="fas fa-sign-in-alt mr-2"></i> Login
-            </button>
         </div>
 
-        <!-- Dashboard (Initially Hidden) -->
-        <div id="dashboardContainer" class="hidden">
+        <!-- Dashboard Section -->
+        <div id="dashboardSection" class="hidden">
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
                 <div>
                     <h1 class="text-2xl font-bold text-gray-800">Admin Dashboard</h1>
@@ -274,28 +283,34 @@
                 </div>
                 <div class="flex flex-wrap gap-3">
                     <div class="relative">
-                        <select id="roleFilter" class="appearance-none bg-white border border-gray-300 rounded-lg px-4 py-2 pr-8 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all">
+                        <select id="roleFilter"
+                            class="appearance-none bg-white border border-gray-300 rounded-lg px-4 py-2 pr-8 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all">
                             <option value="all">All Roles</option>
                             <option value="moderator">Moderators</option>
                             <option value="user">Users</option>
                             <option value="guest">Guests</option>
                         </select>
-                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                        <div
+                            class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M19 9l-7 7-7-7"></path>
                             </svg>
                         </div>
                     </div>
                     <div class="relative">
-                        <select id="statusFilter" class="appearance-none bg-white border border-gray-300 rounded-lg px-4 py-2 pr-8 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all">
+                        <select id="statusFilter"
+                            class="appearance-none bg-white border border-gray-300 rounded-lg px-4 py-2 pr-8 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all">
                             <option value="all">All Status</option>
                             <option value="active">Active</option>
                             <option value="inactive">Inactive</option>
                             <option value="banned">Banned</option>
                         </select>
-                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                        <div
+                            class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M19 9l-7 7-7-7"></path>
                             </svg>
                         </div>
                     </div>
@@ -308,23 +323,12 @@
                     <div class="flex items-center justify-between">
                         <div>
                             <p class="text-gray-500 text-sm">Total Users</p>
-                            <h3 class="text-2xl font-bold text-gray-800" id="userCount">0</h3>
-                            <p class="text-xs text-green-500 mt-1"><i class="fas fa-arrow-up mr-1"></i> 8% from last month</p>
+                            <h3 class="text-2xl font-bold text-gray-800" id="totalUserCount">0</h3>
+                            <p class="text-xs text-green-500 mt-1"><i class="fas fa-arrow-up mr-1"></i> 8% from last
+                                month</p>
                         </div>
                         <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
                             <i class="fas fa-users text-blue-500 text-xl"></i>
-                        </div>
-                    </div>
-                </div>
-                <div class="bg-white rounded-xl shadow-soft p-6 card-hover border border-gray-100">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-gray-500 text-sm">Active Users</p>
-                            <h3 class="text-2xl font-bold text-gray-800" id="activeCount">0</h3>
-                            <p class="text-xs text-gray-500 mt-1">Currently active accounts</p>
-                        </div>
-                        <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-                            <i class="fas fa-user-check text-green-500 text-xl"></i>
                         </div>
                     </div>
                 </div>
@@ -337,6 +341,18 @@
                         </div>
                         <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
                             <i class="fas fa-user-cog text-purple-500 text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-xl shadow-soft p-6 card-hover border border-gray-100">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm">Regular Users</p>
+                            <h3 class="text-2xl font-bold text-gray-800" id="regularUserCount">0</h3>
+                            <p class="text-xs text-gray-500 mt-1">Total user accounts</p>
+                        </div>
+                        <div class="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
+                            <i class="fas fa-user text-gray-500 text-xl"></i>
                         </div>
                     </div>
                 </div>
@@ -358,7 +374,8 @@
             <div class="bg-white rounded-xl shadow-soft overflow-hidden border border-gray-100 mb-8">
                 <div class="border-b border-gray-200">
                     <div class="flex overflow-x-auto">
-                        <button id="allUsersTab" class="px-6 py-4 text-primary-600 border-b-2 border-primary-500 font-medium">
+                        <button id="allUsersTab"
+                            class="px-6 py-4 text-primary-600 border-b-2 border-primary-500 font-medium">
                             All Users
                         </button>
                         <button id="moderatorsTab" class="px-6 py-4 text-gray-500 hover:text-gray-700 font-medium">
@@ -381,13 +398,24 @@
                     <table class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-gray-50">
                             <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Login</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Name</th>
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Email</th>
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Role</th>
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Status</th>
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Last Login</th>
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Actions</th>
                             </tr>
                         </thead>
                         <tbody id="userTableBody" class="bg-white divide-y divide-gray-200">
@@ -403,19 +431,23 @@
                 </div>
                 <div class="p-4 border-t border-gray-200 flex flex-col sm:flex-row justify-between items-center gap-4">
                     <div class="text-sm text-gray-500">
-                        Showing <span id="showingCount" class="font-medium">0</span> of <span id="totalCount" class="font-medium">0</span> users
+                        Showing <span id="showingCount" class="font-medium">0</span> of <span id="totalCount"
+                            class="font-medium">0</span> users
                     </div>
                     <div class="flex items-center space-x-4">
                         <div class="flex items-center space-x-1">
-                            <button id="prevPage" class="px-3 py-1 border border-gray-300 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors">
+                            <button id="prevPage"
+                                class="px-3 py-1 border border-gray-300 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors">
                                 <i class="fas fa-chevron-left"></i>
                             </button>
                             <div class="text-sm text-gray-700">Page <span id="currentPageNum">1</span></div>
-                            <button id="nextPage" class="px-3 py-1 border border-gray-300 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors">
+                            <button id="nextPage"
+                                class="px-3 py-1 border border-gray-300 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors">
                                 <i class="fas fa-chevron-right"></i>
                             </button>
                         </div>
-                        <select id="pageSizeSelect" class="appearance-none bg-white border border-gray-300 rounded-lg px-3 py-1 pr-8 focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm">
+                        <select id="pageSizeSelect"
+                            class="appearance-none bg-white border border-gray-300 rounded-lg px-3 py-1 pr-8 focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm">
                             <option value="5">5 per page</option>
                             <option value="10">10 per page</option>
                             <option value="20">20 per page</option>
@@ -427,29 +459,33 @@
     </main>
 
     <!-- Edit User Modal -->
-    <div id="editUserModal" class="hidden fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50">
+    <div id="editUserModal"
+        class="hidden fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50">
         <div class="bg-white p-6 rounded-xl max-w-md w-full shadow-xl">
             <div class="flex justify-between items-center mb-4">
                 <h3 class="text-xl font-semibold text-gray-800">Edit User</h3>
                 <button id="closeEditModal" class="text-gray-500 hover:text-gray-700 transition-colors">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                        </path>
                     </svg>
                 </button>
             </div>
             <form id="editUserForm">
-                <input type="hidden" id="editUserId">
                 <div class="mb-4">
                     <label for="editName" class="block text-gray-700 mb-2 font-medium">Name</label>
-                    <input type="text" id="editName" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all">
+                    <input type="text" id="editName"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all">
                 </div>
                 <div class="mb-4">
                     <label for="editEmail" class="block text-gray-700 mb-2 font-medium">Email</label>
-                    <input type="email" id="editEmail" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all">
+                    <input type="email" id="editEmail"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all">
                 </div>
                 <div class="mb-4">
                     <label for="editRole" class="block text-gray-700 mb-2 font-medium">Role</label>
-                    <select id="editRole" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all">
+                    <select id="editRole"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all">
                         <option value="moderator">Moderator</option>
                         <option value="user">User</option>
                         <option value="guest">Guest</option>
@@ -457,22 +493,27 @@
                 </div>
                 <div class="mb-6">
                     <label for="editStatus" class="block text-gray-700 mb-2 font-medium">Status</label>
-                    <select id="editStatus" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all">
+                    <select id="editStatus"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all">
                         <option value="active">Active</option>
                         <option value="inactive">Inactive</option>
                         <option value="banned">Banned</option>
                     </select>
                 </div>
                 <div class="flex justify-end space-x-4">
-                    <button type="button" id="cancelEdit" class="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-100 transition-colors">Cancel</button>
-                    <button type="submit" class="px-4 py-2 bg-primary-500 text-white rounded-md hover:bg-primary-600 transition-colors">Save Changes</button>
+                    <button type="button" id="cancelEdit"
+                        class="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-100 transition-colors">Cancel</button>
+                    <button type="submit"
+                        class="px-4 py-2 bg-primary-500 text-white rounded-md hover:bg-primary-600 transition-colors">Save
+                        Changes</button>
                 </div>
             </form>
         </div>
     </div>
 
     <!-- Confirmation Modal -->
-    <div id="confirmationModal" class="hidden fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50">
+    <div id="confirmationModal"
+        class="hidden fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50">
         <div class="bg-white p-6 rounded-xl max-w-md w-full shadow-xl">
             <div class="text-center mb-4">
                 <div id="modalIcon" class="inline-block p-3 rounded-full bg-red-100 text-red-500 mb-4">
@@ -482,14 +523,17 @@
                 <p class="text-gray-600 mt-2" id="modalMessage">Are you sure you want to perform this action?</p>
             </div>
             <div class="flex justify-center space-x-4 mt-6">
-                <button id="cancelAction" class="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-100 transition-colors">Cancel</button>
-                <button id="confirmAction" class="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors">Confirm</button>
+                <button id="cancelAction"
+                    class="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-100 transition-colors">Cancel</button>
+                <button id="confirmAction"
+                    class="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors">Confirm</button>
             </div>
         </div>
     </div>
 
     <!-- Toast Notification -->
-    <div id="toastNotification" class="hidden fixed bottom-4 right-4 bg-white border border-gray-200 rounded-lg shadow-lg p-4 transform transition-all duration-300 z-50 max-w-sm">
+    <div id="toastNotification"
+        class="hidden fixed bottom-4 right-4 bg-white border border-gray-200 rounded-lg shadow-lg p-4 transform transition-all duration-300 z-50 max-w-sm">
         <div class="flex items-center">
             <div id="toastIcon" class="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center mr-4">
                 <i id="toastIconSymbol" class="fas fa-check text-lg"></i>
@@ -504,139 +548,216 @@
         </div>
     </div>
 
-    <script src="scripts.js"></script>
+    <!-- Scripts -->
+    <script src="/components/js/admin.js"></script>
     <script>
-        // Sample data for users
-        const users = [
-            { id: 1, name: 'Admin User', email: 'admin1@social.com', role: 'admin', status: 'active', lastLogin: '2023-06-15' },
-            { id: 2, name: 'John Doe', email: 'john@social.com', role: 'moderator', status: 'active', lastLogin: '2023-06-14' },
-            { id: 3, name: 'Jane Smith', email: 'jane@social.com', role: 'moderator', status: 'active', lastLogin: '2023-06-13' },
-            { id: 4, name: 'Robert Johnson', email: 'robert@social.com', role: 'user', status: 'inactive', lastLogin: '2023-06-10' },
-            { id: 5, name: 'Emily Davis', email: 'emily@social.com', role: 'moderator', status: 'active', lastLogin: '2023-06-12' },
-            { id: 6, name: 'Michael Wilson', email: 'michael@social.com', role: 'user', status: 'active', lastLogin: '2023-06-11' },
-            { id: 7, name: 'Sarah Brown', email: 'sarah@social.com', role: 'user', status: 'active', lastLogin: '2023-06-09' },
-            { id: 8, name: 'David Miller', email: 'david@social.com', role: 'moderator', status: 'inactive', lastLogin: '2023-06-08' },
-            { id: 9, name: 'Jennifer Taylor', email: 'jennifer@social.com', role: 'user', status: 'active', lastLogin: '2023-06-07' },
-            { id: 10, name: 'James Anderson', email: 'james@social.com', role: 'user', status: 'active', lastLogin: '2023-06-06' },
-            { id: 11, name: 'Lisa Johnson', email: 'lisa@social.com', role: 'user', status: 'inactive', lastLogin: '2023-06-05' },
-            { id: 12, name: 'Thomas Brown', email: 'thomas@social.com', role: 'user', status: 'active', lastLogin: '2023-06-04' },
-            { id: 13, name: 'Patricia Davis', email: 'patricia@social.com', role: 'user', status: 'active', lastLogin: '2023-06-03' },
-            { id: 14, name: 'Christopher Wilson', email: 'chris@social.com', role: 'moderator', status: 'active', lastLogin: '2023-06-02' },
-            { id: 15, name: 'Mary Taylor', email: 'mary@social.com', role: 'user', status: 'banned', lastLogin: '2023-06-01' },
-            { id: 16, name: 'Guest User', email: 'guest1@social.com', role: 'guest', status: 'inactive', lastLogin: '2023-05-28' }
-        ];
-
-        // Admin credentials (in a real app, this would be stored securely on the server)
-        const adminCredentials = {
-            id: 'admin123',
-            password: 'admin123'
+        // DOM Elements
+        const authElements = {
+            loginSection: document.getElementById('loginSection'),
+            dashboardSection: document.getElementById('dashboardSection'),
+            loginForm: document.getElementById('loginForm'),
+            emailInput: document.getElementById('email'),
+            passwordInput: document.getElementById('password'),
+            loginError: document.getElementById('loginError'),
+            errorMessage: document.getElementById('errorMessage')
         };
 
-        // DOM Elements
-        const loginContainer = document.getElementById('loginContainer');
-        const dashboardContainer = document.getElementById('dashboardContainer');
-        const loginButton = document.getElementById('loginButton');
-        const loginError = document.getElementById('loginError');
-        const adminIdInput = document.getElementById('adminId');
-        const adminPasswordInput = document.getElementById('adminPassword');
-        const togglePassword = document.getElementById('togglePassword');
-        const userTableBody = document.getElementById('userTableBody');
-        const userSearchInput = document.getElementById('userSearchInput');
-        const roleFilter = document.getElementById('roleFilter');
-        const statusFilter = document.getElementById('statusFilter');
-        const noResults = document.getElementById('noResults');
-        const userCount = document.getElementById('userCount');
-        const activeCount = document.getElementById('activeCount');
-        const modCount = document.getElementById('modCount');
-        const bannedCount = document.getElementById('bannedCount');
-        const showingCount = document.getElementById('showingCount');
-        const totalCount = document.getElementById('totalCount');
-        const currentPageNum = document.getElementById('currentPageNum');
-        const prevPage = document.getElementById('prevPage');
-        const nextPage = document.getElementById('nextPage');
-        const pageSizeSelect = document.getElementById('pageSizeSelect');
-        const editUserModal = document.getElementById('editUserModal');
-        const editUserForm = document.getElementById('editUserForm');
-        const editUserId = document.getElementById('editUserId');
-        const editName = document.getElementById('editName');
-        const editEmail = document.getElementById('editEmail');
-        const editRole = document.getElementById('editRole');
-        const editStatus = document.getElementById('editStatus');
-        const closeEditModal = document.getElementById('closeEditModal');
-        const cancelEdit = document.getElementById('cancelEdit');
-        const confirmationModal = document.getElementById('confirmationModal');
-        const modalTitle = document.getElementById('modalTitle');
-        const modalMessage = document.getElementById('modalMessage');
-        const modalIcon = document.getElementById('modalIcon');
-        const cancelAction = document.getElementById('cancelAction');
-        const confirmAction = document.getElementById('confirmAction');
-        const profileDropdownButton = document.getElementById('profileDropdownButton');
-        const profileDropdown = document.getElementById('profileDropdown');
-        const logoutButton = document.getElementById('logoutButton');
-        const menuBtn = document.getElementById('menu-btn');
-        const mobileMenu = document.getElementById('mobile-menu');
-        const closeMenu = document.getElementById('close-menu');
-        const mobileLogout = document.getElementById('mobile-logout');
-        const toastNotification = document.getElementById('toastNotification');
-        const toastIcon = document.getElementById('toastIcon');
-        const toastIconSymbol = document.getElementById('toastIconSymbol');
-        const toastTitle = document.getElementById('toastTitle');
-        const toastMessage = document.getElementById('toastMessage');
-        const closeToast = document.getElementById('closeToast');
-        
-        // Tab elements
-        const allUsersTab = document.getElementById('allUsersTab');
-        const moderatorsTab = document.getElementById('moderatorsTab');
-        const usersTab = document.getElementById('usersTab');
-        const guestsTab = document.getElementById('guestsTab');
-        const bannedTab = document.getElementById('bannedTab');
+        const dashboardElements = {
+            userTableBody: document.getElementById('userTableBody'),
+            userSearchInput: document.getElementById('userSearchInput'),
+            roleFilter: document.getElementById('roleFilter'),
+            statusFilter: document.getElementById('statusFilter'),
+            noResults: document.getElementById('noResults'),
+            totalUserCount: document.getElementById('totalUserCount'),
+            modCount: document.getElementById('modCount'),
+            regularUserCount: document.getElementById('regularUserCount'),
+            bannedCount: document.getElementById('bannedCount'),
+            showingCount: document.getElementById('showingCount'),
+            totalCount: document.getElementById('totalCount'),
+            currentPageNum: document.getElementById('currentPageNum'),
+            prevPage: document.getElementById('prevPage'),
+            nextPage: document.getElementById('nextPage'),
+            pageSizeSelect: document.getElementById('pageSizeSelect'),
+            editUserModal: document.getElementById('editUserModal'),
+            editUserForm: document.getElementById('editUserForm'),
+            editName: document.getElementById('editName'),
+            editEmail: document.getElementById('editEmail'),
+            editRole: document.getElementById('editRole'),
+            editStatus: document.getElementById('editStatus'),
+            closeEditModal: document.getElementById('closeEditModal'),
+            cancelEdit: document.getElementById('cancelEdit'),
+            confirmationModal: document.getElementById('confirmationModal'),
+            modalTitle: document.getElementById('modalTitle'),
+            modalMessage: document.getElementById('modalMessage'),
+            modalIcon: document.getElementById('modalIcon'),
+            cancelAction: document.getElementById('cancelAction'),
+            confirmAction: document.getElementById('confirmAction'),
+            profileDropdownButton: document.getElementById('profileDropdownButton'),
+            profileDropdown: document.getElementById('profileDropdown'),
+            logoutButton: document.getElementById('logoutButton'),
+            menuBtn: document.getElementById('menu-btn'),
+            mobileMenu: document.getElementById('mobile-menu'),
+            closeMenu: document.getElementById('close-menu'),
+            mobileLogout: document.getElementById('mobile-logout'),
+            allUsersTab: document.getElementById('allUsersTab'),
+            moderatorsTab: document.getElementById('moderatorsTab'),
+            usersTab: document.getElementById('usersTab'),
+            guestsTab: document.getElementById('guestsTab'),
+            bannedTab: document.getElementById('bannedTab'),
+            adminName: document.getElementById('adminName'),
+            togglePassword: document.getElementById('togglePassword'),
+            closeToast: document.getElementById('closeToast'),
+            toastNotification: document.getElementById('toastNotification'),
+            toastIcon: document.getElementById('toastIcon'),
+            toastIconSymbol: document.getElementById('toastIconSymbol'),
+            toastTitle: document.getElementById('toastTitle'),
+            toastMessage: document.getElementById('toastMessage')
+        };
 
-        // Pagination state
+        // State
+        let users = [];
+        let filteredUsers = [];
         let currentPage = 1;
         let itemsPerPage = 5;
-        let filteredUsers = [...users];
         let activeTab = 'all';
+        let loggedInAdminId = null;
 
-        // Check if admin is logged in
-        function checkAuth() {
-            const isLoggedIn = localStorage.getItem('adminLoggedIn') === 'true';
-            if (isLoggedIn) {
-                loginContainer.classList.add('hidden');
-                dashboardContainer.classList.remove('hidden');
-                updateDashboard();
-            } else {
-                loginContainer.classList.remove('hidden');
-                dashboardContainer.classList.add('hidden');
+        // Clear localStorage
+        function clearLocalStorage() {
+            localStorage.clear();
+        }
+
+        // Format timestamp
+        function formatDate(timestamp) {
+            if (!timestamp) return 'Never';
+            try {
+                const date = new Date(timestamp);
+                return date.toLocaleString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    hour: 'numeric',
+                    minute: '2-digit',
+                    hour12: true
+                });
+            } catch (err) {
+                console.error('Error formatting date:', err);
+                return timestamp;
             }
         }
 
-        // Update dashboard data
+        // Check authentication
+        async function checkAuth() {
+            if (!authElements.loginSection || !authElements.dashboardSection) {
+                console.error('Critical DOM elements missing:', {
+                    loginSection: !!authElements.loginSection,
+                    dashboardSection: !!authElements.dashboardSection
+                });
+                return false;
+            }
+
+            try {
+                const response = await fetch('/api/admin/me', {
+                    method: 'GET',
+                    credentials: 'include'
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.user && data.user.role === 'admin' && data.user.email) {
+                        loggedInAdminId = data.user.id;
+                        dashboardElements.adminName.textContent = data.user.name || 'Admin';
+                        authElements.loginSection.classList.add('hidden');
+                        authElements.dashboardSection.classList.remove('hidden');
+                        await fetchUsers();
+                        updateDashboard();
+                        return true;
+                    }
+                }
+                authElements.loginSection.classList.remove('hidden');
+                authElements.dashboardSection.classList.add('hidden');
+                return false;
+            } catch (err) {
+                console.error('Error checking auth:', err);
+                authElements.loginSection.classList.remove('hidden');
+                authElements.dashboardSection.classList.add('hidden');
+                return false;
+            }
+        }
+
+        // Fetch users
+        // Fetch users
+        async function fetchUsers() {
+            try {
+                const response = await fetch('/api/admin/users', { // Changed from /api/users
+                    method: 'GET',
+                    credentials: 'include'
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    users = (data.users || []).filter(user => !['admin', 'owner'].includes(user.role));
+                    filteredUsers = [...users];
+                    console.log('Fetched users:', users);
+                } else {
+                    const errorData = await response.json();
+                    console.error('Failed to fetch users:', response.status, errorData);
+                    showToast('Error', errorData.message || 'Failed to fetch users.', 'error');
+                }
+            } catch (err) {
+                console.error('Error fetching users:', err);
+                showToast('Error', 'Failed to fetch users.', 'error');
+            }
+        }
+
+        // Handle login
+        async function handleLogin(e) {
+            e.preventDefault();
+            try {
+                const response = await fetch('/api/admin/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: authElements.emailInput.value,
+                        password: authElements.passwordInput.value
+                    }),
+                    credentials: 'include'
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    await checkAuth();
+                    showToast('Login Successful', 'Welcome to the Admin Dashboard', 'success');
+                } else {
+                    authElements.loginError.classList.remove('hidden');
+                    authElements.errorMessage.textContent = data.message || 'Invalid credentials. Please try again.';
+                }
+            } catch (err) {
+                console.error('Login error:', err);
+                authElements.loginError.classList.remove('hidden');
+                authElements.errorMessage.textContent = 'Login failed. Please try again.';
+            }
+        }
+
+        // Update dashboard
         function updateDashboard() {
-            // Update counts
-            userCount.textContent = users.filter(user => user.role !== 'admin').length;
-            activeCount.textContent = users.filter(user => user.status === 'active' && user.role !== 'admin').length;
-            modCount.textContent = users.filter(user => user.role === 'moderator').length;
-            bannedCount.textContent = users.filter(user => user.status === 'banned').length;
-            
-            // Apply filters and render table
+            dashboardElements.totalUserCount.textContent = users.length;
+            dashboardElements.modCount.textContent = users.filter(user => user.role === 'moderator').length;
+            dashboardElements.regularUserCount.textContent = users.filter(user => user.role === 'user').length;
+            dashboardElements.bannedCount.textContent = users.filter(user => user.status === 'banned').length;
             applyFilters();
         }
 
-        // Apply filters and search
+        // Apply filters
         function applyFilters() {
-            const searchTerm = userSearchInput.value.toLowerCase();
-            const roleValue = roleFilter.value;
-            const statusValue = statusFilter.value;
-            
+            const searchTerm = dashboardElements.userSearchInput.value.toLowerCase();
+            const roleValue = dashboardElements.roleFilter.value;
+            const statusValue = dashboardElements.statusFilter.value;
+
             filteredUsers = users.filter(user => {
-                // Exclude admin users from the admin panel
-                if (user.role === 'admin') return false;
-                
-                const matchesSearch = 
-                    user.name.toLowerCase().includes(searchTerm) || 
-                    user.email.toLowerCase().includes(searchTerm) ||
-                    user.id.toString().includes(searchTerm);
-                
+                const matchesSearch =
+                    (user.name && user.name.toLowerCase().includes(searchTerm)) ||
+                    (user.email && user.email.toLowerCase().includes(searchTerm));
+
                 let matchesRole = true;
                 if (activeTab === 'moderators') {
                     matchesRole = user.role === 'moderator';
@@ -644,50 +765,46 @@
                     matchesRole = user.role === 'user';
                 } else if (activeTab === 'guests') {
                     matchesRole = user.role === 'guest';
-                } else if (activeTab === 'banned') {
-                    matchesRole = user.status === 'banned';
-                } else {
+                } else if (activeTab === 'all') {
                     matchesRole = roleValue === 'all' || user.role === roleValue;
                 }
-                
+
                 let matchesStatus = true;
                 if (activeTab === 'banned') {
                     matchesStatus = user.status === 'banned';
                 } else {
                     matchesStatus = statusValue === 'all' || user.status === statusValue;
                 }
-                
+
                 return matchesSearch && matchesRole && matchesStatus;
             });
-            
-            totalCount.textContent = filteredUsers.length;
-            
-            // Reset to first page when filters change
+
+            dashboardElements.totalCount.textContent = filteredUsers.length;
             currentPage = 1;
-            currentPageNum.textContent = currentPage;
+            dashboardElements.currentPageNum.textContent = currentPage;
             renderTable();
         }
 
-        // Render table with current filters and pagination
+        // Render table
         function renderTable() {
             const start = (currentPage - 1) * itemsPerPage;
             const end = start + itemsPerPage;
             const paginatedUsers = filteredUsers.slice(start, end);
-            
-            userTableBody.innerHTML = '';
-            
+
+            dashboardElements.userTableBody.innerHTML = '';
+
             if (paginatedUsers.length === 0) {
-                noResults.classList.remove('hidden');
-                showingCount.textContent = '0';
+                dashboardElements.noResults.classList.remove('hidden');
+                dashboardElements.showingCount.textContent = '0';
             } else {
-                noResults.classList.add('hidden');
-                showingCount.textContent = paginatedUsers.length;
-                
+                dashboardElements.noResults.classList.add('hidden');
+                dashboardElements.showingCount.textContent = paginatedUsers.length;
+
                 paginatedUsers.forEach(user => {
                     const row = document.createElement('tr');
                     row.className = 'table-row-hover';
-                    
-                    // Status badge class
+                    row.setAttribute('data-id', user.id);
+
                     let statusClass, statusIcon;
                     if (user.status === 'active') {
                         statusClass = 'bg-green-100 text-green-800';
@@ -695,12 +812,11 @@
                     } else if (user.status === 'inactive') {
                         statusClass = 'bg-gray-100 text-gray-800';
                         statusIcon = 'fa-times';
-                    } else if (user.status === 'banned') {
+                    } else {
                         statusClass = 'bg-red-100 text-red-800';
                         statusIcon = 'fa-ban';
                     }
-                    
-                    // Role badge class
+
                     let roleClass, roleIcon;
                     if (user.role === 'moderator') {
                         roleClass = 'bg-purple-100 text-purple-800';
@@ -708,15 +824,46 @@
                     } else if (user.role === 'user') {
                         roleClass = 'bg-gray-100 text-gray-800';
                         roleIcon = 'fa-user';
-                    } else if (user.role === 'guest') {
+                    } else {
                         roleClass = 'bg-yellow-100 text-yellow-800';
                         roleIcon = 'fa-user-clock';
                     }
-                    
+
+                    const guestTooltip = user.role === 'guest' ? 'title="Guest users have no persistent account and cannot be modified"' : '';
+                    const emailDisplay = user.role === 'guest' || !user.email || user.email === '-' ? 'N/A' : user.email;
+                    const isSelf = user.id == loggedInAdminId;
+                    const actionsDisplay = user.role === 'guest' || isSelf ? 'N/A' : `
+                        <div class="flex space-x-2">
+                            <button class="text-primary-600 hover:text-primary-800 transition-colors edit-user" data-id="${user.id}" title="Edit User">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            ${user.role === 'moderator' ? `
+                                <button class="text-yellow-600 hover:text-yellow-800 transition-colors demote-mod" data-id="${user.id}" title="Demote Moderator">
+                                    <i class="fas fa-user-minus"></i>
+                                </button>
+                            ` : user.role === 'user' ? `
+                                <button class="text-yellow-600 hover:text-yellow-800 transition-colors demote-to-guest" data-id="${user.id}" title="Demote to Guest">
+                                    <i class="fas fa-user-minus"></i>
+                                </button>
+                            ` : ''}
+                            ${user.status !== 'banned' ? `
+                                <button class="text-red-600 hover:text-red-800 transition-colors ban-user" data-id="${user.id}" title="Ban User">
+                                    <i class="fas fa-ban"></i>
+                                </button>
+                            ` : `
+                                <button class="text-green-600 hover:text-green-800 transition-colors unban-user" data-id="${user.id}" title="Unban User">
+                                    <i class="fas fa-user-check"></i>
+                                </button>
+                            `}
+                            <button class="text-red-600 hover:text-red-800 transition-colors delete-user" data-id="${user.id}" title="Delete User">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </div>
+                    `;
+
                     row.innerHTML = `
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${user.id}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${user.name}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${user.email}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700" ${guestTooltip}>${user.name || 'Guest'}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500" ${guestTooltip}>${emailDisplay}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                             <span class="px-2 py-1 inline-flex items-center text-xs leading-5 font-semibold rounded-full ${roleClass}">
                                 <i class="fas ${roleIcon} mr-1"></i> ${user.role}
@@ -727,372 +874,524 @@
                                 <i class="fas ${statusIcon} mr-1"></i> ${user.status}
                             </span>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${user.lastLogin}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <div class="flex space-x-2">
-                                <button class="text-primary-600 hover:text-primary-800 transition-colors edit-user" data-id="${user.id}" title="Edit User">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                                ${user.role === 'moderator' ? `
-                                    <button class="text-yellow-600 hover:text-yellow-800 transition-colors demote-mod" data-id="${user.id}" title="Demote Moderator">
-                                        <i class="fas fa-user-minus"></i>
-                                    </button>
-                                ` : ''}
-                                ${user.status !== 'banned' ? `
-                                    <button class="text-red-600 hover:text-red-800 transition-colors ban-user" data-id="${user.id}" title="Ban User">
-                                        <i class="fas fa-ban"></i>
-                                    </button>
-                                ` : `
-                                    <button class="text-green-600 hover:text-green-800 transition-colors unban-user" data-id="${user.id}" title="Unban User">
-                                        <i class="fas fa-user-check"></i>
-                                    </button>
-                                `}
-                                <button class="text-red-600 hover:text-red-800 transition-colors delete-user" data-id="${user.id}" title="Delete User">
-                                    <i class="fas fa-trash-alt"></i>
-                                </button>
-                            </div>
-                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${formatDate(user.lastLogin)}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">${actionsDisplay}</td>
                     `;
-                    
-                    userTableBody.appendChild(row);
+
+                    dashboardElements.userTableBody.appendChild(row);
                 });
-                
-                // Add event listeners to action buttons
-                document.querySelectorAll('.edit-user').forEach(button => {
-                    button.addEventListener('click', function() {
-                        const userId = this.getAttribute('data-id');
-                        openEditModal(userId);
-                    });
-                });
-                
-                document.querySelectorAll('.demote-mod').forEach(button => {
-                    button.addEventListener('click', function() {
-                        const userId = this.getAttribute('data-id');
-                        showConfirmationModal('Demote Moderator', 'Are you sure you want to demote this moderator to a regular user?', 'warning', () => {
-                            demoteModerator(userId);
-                        });
-                    });
-                });
-                
-                document.querySelectorAll('.ban-user').forEach(button => {
-                    button.addEventListener('click', function() {
-                        const userId = this.getAttribute('data-id');
-                        showConfirmationModal('Ban User', 'Are you sure you want to ban this user? They will be unable to access their account.', 'danger', () => {
-                            banUser(userId);
-                        });
-                    });
-                });
-                
-                document.querySelectorAll('.unban-user').forEach(button => {
-                    button.addEventListener('click', function() {
-                        const userId = this.getAttribute('data-id');
-                        showConfirmationModal('Unban User', 'Are you sure you want to unban this user? They will regain access to their account.', 'info', () => {
-                            unbanUser(userId);
-                        });
-                    });
-                });
-                
-                document.querySelectorAll('.delete-user').forEach(button => {
-                    button.addEventListener('click', function() {
-                        const userId = this.getAttribute('data-id');
-                        showConfirmationModal('Delete User', 'Are you sure you want to delete this user? They will become a guest user.', 'danger', () => {
-                            deleteUser(userId);
-                        });
-                    });
-                });
+
+                attachTableEventListeners();
             }
-            
-            // Update pagination buttons
-            prevPage.disabled = currentPage === 1;
-            nextPage.disabled = end >= filteredUsers.length;
+
+            dashboardElements.prevPage.disabled = currentPage === 1;
+            dashboardElements.nextPage.disabled = end >= filteredUsers.length;
         }
 
-        // Open edit user modal
-        function openEditModal(userId) {
-            const user = users.find(u => u.id.toString() === userId);
-            if (user) {
-                editUserId.value = user.id;
-                editName.value = user.name;
-                editEmail.value = user.email;
-                editRole.value = user.role;
-                editStatus.value = user.status;
-                
-                editUserModal.classList.remove('hidden');
+        // Attach table event listeners
+        function attachTableEventListeners() {
+            document.querySelectorAll('.edit-user').forEach(button => {
+                button.addEventListener('click', () => openEditModal(button.getAttribute('data-id')));
+            });
+
+            document.querySelectorAll('.demote-mod').forEach(button => {
+                button.addEventListener('click', () => {
+                    showConfirmationModal('Demote Moderator', 'Are you sure you want to demote this moderator to a regular user?', 'warning', () => {
+                        demoteUser(button.getAttribute('data-id'), 'moderator');
+                    });
+                });
+            });
+
+            document.querySelectorAll('.demote-to-guest').forEach(button => {
+                button.addEventListener('click', () => {
+                    showConfirmationModal(
+                        'Demote to Guest',
+                        'Are you sure you want to demote this user to a guest? This will remove their persistent account details and cannot be undone.',
+                        'danger',
+                        () => {
+                            demoteToGuest(button.getAttribute('data-id'));
+                        }
+                    );
+                });
+            });
+
+            document.querySelectorAll('.ban-user').forEach(button => {
+                button.addEventListener('click', () => {
+                    const userId = button.getAttribute('data-id');
+                    if (userId == loggedInAdminId) {
+                        showToast('Error', 'You cannot ban your own account.', 'error');
+                        return;
+                    }
+                    showConfirmationModal('Ban User', 'Are you sure you want to ban this user? They will be unable to access their account.', 'danger', () => {
+                        banUser(userId);
+                    });
+                });
+            });
+
+            document.querySelectorAll('.unban-user').forEach(button => {
+                button.addEventListener('click', () => {
+                    const userId = button.getAttribute('data-id');
+                    if (userId == loggedInAdminId) {
+                        showToast('Error', 'You cannot unban your own account.', 'error');
+                        return;
+                    }
+                    showConfirmationModal('Unban User', 'Are you sure you want to unban this user? They will regain access to their account.', 'info', () => {
+                        unbanUser(userId);
+                    });
+                });
+            });
+
+            document.querySelectorAll('.delete-user').forEach(button => {
+                button.addEventListener('click', () => {
+                    const userId = button.getAttribute('data-id');
+                    if (userId == loggedInAdminId) {
+                        showToast('Error', 'You cannot delete your own account.', 'error');
+                        return;
+                    }
+                    showConfirmationModal('Delete User', 'Are you sure you want to permanently delete this user?', 'danger', () => {
+                        deleteUser(userId);
+                    });
+                });
+            });
+        }
+
+        // Open edit modal
+        async function openEditModal(userId) {
+            const user = users.find(u => u.id == userId);
+            try {
+                const response = await fetch('/api/admin/me', {
+                    method: 'GET',
+                    credentials: 'include'
+                });
+                const data = await response.json();
+                const loggedInUser = data.user;
+                const isSelf = user && loggedInUser.id == user.id;
+
+                if (user && dashboardElements.editUserModal) {
+                    dashboardElements.editName.value = user.name || 'Guest';
+                    dashboardElements.editEmail.value = user.role === 'guest' || !user.email || user.email === '-' ? 'N/A' : user.email;
+                    dashboardElements.editRole.value = user.role;
+                    dashboardElements.editStatus.value = user.status;
+
+                    dashboardElements.editUserForm.dataset.userId = userId;
+
+                    if (!isSelf) {
+                        dashboardElements.editName.disabled = true;
+                        dashboardElements.editName.classList.add('bg-gray-100', 'cursor-not-allowed');
+                        dashboardElements.editEmail.disabled = true;
+                        dashboardElements.editEmail.classList.add('bg-gray-100', 'cursor-not-allowed');
+                        let note = dashboardElements.editUserModal.querySelector('.edit-restriction-note');
+                        if (!note) {
+                            note = document.createElement('p');
+                            note.className = 'edit-restriction-note text-sm text-gray-500 mb-4';
+                            note.textContent = 'Name and email can only be edited by the user themselves.';
+                            dashboardElements.editUserForm.insertBefore(note, dashboardElements.editUserForm.firstChild);
+                        }
+                    } else {
+                        dashboardElements.editName.disabled = false;
+                        dashboardElements.editName.classList.remove('bg-gray-100', 'cursor-not-allowed');
+                        dashboardElements.editEmail.disabled = false;
+                        dashboardElements.editEmail.classList.remove('bg-gray-100', 'cursor-not-allowed');
+                        const note = dashboardElements.editUserModal.querySelector('.edit-restriction-note');
+                        if (note) note.remove();
+                    }
+
+                    if (isSelf) {
+                        dashboardElements.editRole.disabled = true;
+                        dashboardElements.editRole.classList.add('bg-gray-100', 'cursor-not-allowed');
+                        let adminNote = dashboardElements.editUserModal.querySelector('.admin-restriction-note');
+                        if (!adminNote) {
+                            adminNote = document.createElement('p');
+                            adminNote.className = 'admin-restriction-note text-sm text-gray-500 mb-4';
+                            adminNote.textContent = 'Admin role cannot be changed for security reasons.';
+                            dashboardElements.editUserForm.insertBefore(adminNote, dashboardElements.editUserForm.firstChild);
+                        }
+                    } else {
+                        dashboardElements.editRole.disabled = false;
+                        dashboardElements.editRole.classList.remove('bg-gray-100', 'cursor-not-allowed');
+                        const adminNote = dashboardElements.editUserModal.querySelector('.admin-restriction-note');
+                        if (adminNote) adminNote.remove();
+                    }
+
+                    dashboardElements.editUserModal.classList.remove('hidden');
+                } else {
+                    throw new Error('User not found or modal unavailable');
+                }
+            } catch (err) {
+                console.error('Error opening edit modal:', err);
+                showToast('Error', 'Failed to load edit modal.', 'error');
             }
         }
 
-        // Demote moderator to regular user
-        function demoteModerator(userId) {
-            const userIndex = users.findIndex(u => u.id.toString() === userId);
-            if (userIndex !== -1 && users[userIndex].role === 'moderator') {
-                users[userIndex].role = 'user';
-                updateDashboard();
-                showToast('User Demoted', `User has been demoted to a regular user.`, 'success');
+        // Demote user
+        async function demoteUser(userId, fromRole) {
+            try {
+                const response = await fetch(`/api/users/demote`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: userId, fromRole }),
+                    credentials: 'include'
+                });
+
+                if (response.ok) {
+                    await fetchUsers();
+                    showToast('User Demoted', `User has been demoted to a regular user.`, 'success');
+                } else {
+                    const data = await response.json();
+                    console.error('Demote user failed:', response.status, data);
+                    showToast('Error', data.message || 'Failed to demote user.', 'error');
+                }
+            } catch (err) {
+                console.error('Error demoting user:', err);
+                showToast('Error', 'Failed to demote user.', 'error');
+            }
+        }
+
+        // Demote to guest
+        async function demoteToGuest(userId) {
+            try {
+                const payload = { id: userId, role: 'guest', email: null, name: null };
+                const response = await fetch(`/api/users`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload),
+                    credentials: 'include'
+                });
+
+                if (response.ok) {
+                    await fetchUsers();
+                    showToast('User Demoted', 'User has been demoted to a guest.', 'success');
+                } else {
+                    const data = await response.json();
+                    console.error('Demote to guest failed:', response.status, data);
+                    showToast('Error', data.message || 'Failed to demote user to guest.', 'error');
+                }
+            } catch (err) {
+                console.error('Error demoting to guest:', err);
+                showToast('Error', 'Failed to demote user to guest.', 'error');
             }
         }
 
         // Ban user
-        function banUser(userId) {
-            const userIndex = users.findIndex(u => u.id.toString() === userId);
-            if (userIndex !== -1) {
-                users[userIndex].status = 'banned';
-                updateDashboard();
-                showToast('User Banned', 'User has been banned from the platform.', 'success');
+        async function banUser(userId) {
+            try {
+                const response = await fetch(`/api/users/ban`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: userId }),
+                    credentials: 'include'
+                });
+
+                if (response.ok) {
+                    await fetchUsers();
+                    showToast('User Banned', 'User has been banned from the platform.', 'success');
+                } else {
+                    const data = await response.json();
+                    console.error('Ban user failed:', response.status, data);
+                    showToast('Error', data.message || 'Failed to ban user.', 'error');
+                }
+            } catch (err) {
+                console.error('Error banning user:', err);
+                showToast('Error', 'Failed to ban user.', 'error');
             }
         }
 
         // Unban user
-        function unbanUser(userId) {
-            const userIndex = users.findIndex(u => u.id.toString() === userId);
-            if (userIndex !== -1 && users[userIndex].status === 'banned') {
-                users[userIndex].status = 'active';
-                updateDashboard();
-                showToast('User Unbanned', 'User has been unbanned and can now access their account.', 'success');
+        async function unbanUser(userId) {
+            try {
+                const response = await fetch(`/api/users/unban`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: userId }),
+                    credentials: 'include'
+                });
+
+                if (response.ok) {
+                    await fetchUsers();
+                    showToast('User Unbanned', 'User has been unbanned and can now access their account.', 'success');
+                } else {
+                    const data = await response.json();
+                    console.error('Unban user failed:', response.status, data);
+                    showToast('Error', data.message || 'Failed to unban user.', 'error');
+                }
+            } catch (err) {
+                console.error('Error unbanning user:', err);
+                showToast('Error', 'Failed to unban user.', 'error');
             }
         }
 
-        // Delete user (convert to guest)
-        function deleteUser(userId) {
-            const userIndex = users.findIndex(u => u.id.toString() === userId);
-            if (userIndex !== -1) {
-                // Convert to guest instead of removing
-                users[userIndex].role = 'guest';
-                users[userIndex].status = 'inactive';
-                updateDashboard();
-                showToast('User Deleted', 'User has been converted to guest status.', 'success');
+        // Delete user
+        async function deleteUser(userId) {
+            try {
+                const response = await fetch(`/api/users`, {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: userId }),
+                    credentials: 'include'
+                });
+
+                if (response.ok) {
+                    await fetchUsers();
+                    showToast('User Deleted', 'User has been permanently deleted.', 'success');
+                } else {
+                    const data = await response.json();
+                    console.error('Delete user failed:', response.status, data);
+                    showToast('Error', data.message || 'Failed to delete user.', 'error');
+                }
+            } catch (err) {
+                console.error('Error deleting user:', err);
+                showToast('Error', 'Failed to delete user.', 'error');
+            }
+        }
+
+        // Submit user edit
+        async function submitUserEdit(userId) {
+            try {
+                const payload = { id: userId };
+                if (!dashboardElements.editName.disabled && dashboardElements.editName.value) payload.name = dashboardElements.editName.value;
+                if (!dashboardElements.editEmail.disabled && dashboardElements.editEmail.value && dashboardElements.editEmail.value !== 'N/A') payload.email = dashboardElements.editEmail.value;
+                if (!dashboardElements.editRole.disabled && dashboardElements.editRole.value) payload.role = dashboardElements.editRole.value;
+                if (dashboardElements.editStatus.value) payload.status = dashboardElements.editStatus.value;
+
+                if (payload.role === 'guest') {
+                    payload.email = null;
+                    payload.name = null;
+                }
+
+                console.log('Submitting user edit payload:', payload);
+
+                const response = await fetch(`/api/users`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload),
+                    credentials: 'include'
+                });
+
+                if (response.ok) {
+                    await fetchUsers();
+                    dashboardElements.editUserModal.classList.add('hidden');
+                    showToast(
+                        'User Updated',
+                        payload.role === 'guest' ? 'User has been demoted to a guest.' : 'User details have been updated successfully.',
+                        'success'
+                    );
+                } else {
+                    const data = await response.json();
+                    console.error('User edit failed:', response.status, data);
+                    showToast('Error', data.message || 'Failed to update user.', 'error');
+                }
+            } catch (err) {
+                console.error('Error updating user:', err);
+                showToast('Error', 'Failed to update user.', 'error');
             }
         }
 
         // Show confirmation modal
         function showConfirmationModal(title, message, type, onConfirm) {
-            modalTitle.textContent = title;
-            modalMessage.textContent = message;
-            
-            // Set icon based on type
+            dashboardElements.modalTitle.textContent = title;
+            dashboardElements.modalMessage.textContent = message;
+
             if (type === 'danger') {
-                modalIcon.className = 'inline-block p-3 rounded-full bg-red-100 text-red-500 mb-4';
-                modalIcon.innerHTML = '<i class="fas fa-exclamation-triangle text-2xl"></i>';
-                confirmAction.className = 'px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors';
+                dashboardElements.modalIcon.className = 'inline-block p-3 rounded-full bg-red-100 text-red-500 mb-4';
+                dashboardElements.modalIcon.innerHTML = '<i class="fas fa-exclamation-triangle text-2xl"></i>';
+                dashboardElements.confirmAction.className = 'px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors';
             } else if (type === 'warning') {
-                modalIcon.className = 'inline-block p-3 rounded-full bg-yellow-100 text-yellow-500 mb-4';
-                modalIcon.innerHTML = '<i class="fas fa-exclamation-circle text-2xl"></i>';
-                confirmAction.className = 'px-4 py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 transition-colors';
+                dashboardElements.modalIcon.className = 'inline-block p-3 rounded-full bg-yellow-100 text-yellow-500 mb-4';
+                dashboardElements.modalIcon.innerHTML = '<i class="fas fa-exclamation-circle text-2xl"></i>';
+                dashboardElements.confirmAction.className = 'px-4 py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 transition-colors';
             } else {
-                modalIcon.className = 'inline-block p-3 rounded-full bg-blue-100 text-blue-500 mb-4';
-                modalIcon.innerHTML = '<i class="fas fa-info-circle text-2xl"></i>';
-                confirmAction.className = 'px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors';
+                dashboardElements.modalIcon.className = 'inline-block p-3 rounded-full bg-blue-100 text-blue-500 mb-4';
+                dashboardElements.modalIcon.innerHTML = '<i class="fas fa-info-circle text-2xl"></i>';
+                dashboardElements.confirmAction.className = 'px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors';
             }
-            
-            confirmationModal.classList.remove('hidden');
-            
-            // Store the confirm action
-            confirmAction.onclick = () => {
+
+            dashboardElements.confirmationModal.classList.remove('hidden');
+            dashboardElements.confirmAction.onclick = () => {
                 onConfirm();
-                confirmationModal.classList.add('hidden');
+                dashboardElements.confirmationModal.classList.add('hidden');
             };
         }
 
-        // Show toast notification
+        // Show toast
         function showToast(title, message, type) {
-            toastTitle.textContent = title;
-            toastMessage.textContent = message;
-            
-            // Set icon and colors based on type
+            dashboardElements.toastTitle.textContent = title;
+            dashboardElements.toastMessage.textContent = message;
+
             if (type === 'success') {
-                toastIcon.className = 'flex-shrink-0 w-10 h-10 rounded-full bg-green-100 flex items-center justify-center mr-4';
-                toastIconSymbol.className = 'fas fa-check text-green-500 text-lg';
+                dashboardElements.toastIcon.className = 'flex-shrink-0 w-10 h-10 rounded-full bg-green-100 flex items-center justify-center mr-4';
+                dashboardElements.toastIconSymbol.className = 'fas fa-check text-green-500 text-lg';
             } else if (type === 'error') {
-                toastIcon.className = 'flex-shrink-0 w-10 h-10 rounded-full bg-red-100 flex items-center justify-center mr-4';
-                toastIconSymbol.className = 'fas fa-times text-red-500 text-lg';
+                dashboardElements.toastIcon.className = 'flex-shrink-0 w-10 h-10 rounded-full bg-red-100 flex items-center justify-center mr-4';
+                dashboardElements.toastIconSymbol.className = 'fas fa-times text-red-500 text-lg';
             } else if (type === 'warning') {
-                toastIcon.className = 'flex-shrink-0 w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center mr-4';
-                toastIconSymbol.className = 'fas fa-exclamation text-yellow-500 text-lg';
+                dashboardElements.toastIcon.className = 'flex-shrink-0 w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center mr-4';
+                dashboardElements.toastIconSymbol.className = 'fas fa-exclamation text-yellow-500 text-lg';
             } else {
-                toastIcon.className = 'flex-shrink-0 w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center mr-4';
-                toastIconSymbol.className = 'fas fa-info text-blue-500 text-lg';
+                dashboardElements.toastIcon.className = 'flex-shrink-0 w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center mr-4';
+                dashboardElements.toastIconSymbol.className = 'fas fa-info text-blue-500 text-lg';
             }
-            
-            // Show toast
-            toastNotification.classList.remove('hidden');
-            toastNotification.classList.add('animate-fade-in');
-            
-            // Auto hide after 3 seconds
+
+            dashboardElements.toastNotification.classList.remove('hidden');
+            dashboardElements.toastNotification.classList.add('animate-fade-in');
             setTimeout(() => {
-                toastNotification.classList.add('opacity-0', 'translate-y-2');
+                dashboardElements.toastNotification.classList.add('opacity-0', 'translate-y-2');
                 setTimeout(() => {
-                    toastNotification.classList.add('hidden');
-                    toastNotification.classList.remove('opacity-0', 'translate-y-2');
+                    dashboardElements.toastNotification.classList.add('hidden');
+                    dashboardElements.toastNotification.classList.remove('opacity-0', 'translate-y-2');
                 }, 300);
             }, 3000);
         }
 
         // Set active tab
         function setActiveTab(tab) {
-            // Remove active class from all tabs
-            [allUsersTab, moderatorsTab, usersTab, guestsTab, bannedTab].forEach(tabEl => {
-                tabEl.classList.remove('text-primary-600', 'border-b-2', 'border-primary-500');
-                tabEl.classList.add('text-gray-500', 'hover:text-gray-700');
+            [dashboardElements.allUsersTab, dashboardElements.moderatorsTab, dashboardElements.usersTab, dashboardElements.guestsTab, dashboardElements.bannedTab].forEach(tabEl => {
+                if (tabEl) {
+                    tabEl.classList.remove('text-primary-600', 'border-b-2', 'border-primary-500');
+                    tabEl.classList.add('text-gray-500', 'hover:text-gray-700');
+                }
             });
-            
-            // Add active class to selected tab
+
             let activeTabEl;
-            if (tab === 'all') {
-                activeTabEl = allUsersTab;
-            } else if (tab === 'moderators') {
-                activeTabEl = moderatorsTab;
-            } else if (tab === 'users') {
-                activeTabEl = usersTab;
-            } else if (tab === 'guests') {
-                activeTabEl = guestsTab;
-            } else if (tab === 'banned') {
-                activeTabEl = bannedTab;
+            if (tab === 'all') activeTabEl = dashboardElements.allUsersTab;
+            else if (tab === 'moderators') activeTabEl = dashboardElements.moderatorsTab;
+            else if (tab === 'users') activeTabEl = dashboardElements.usersTab;
+            else if (tab === 'guests') activeTabEl = dashboardElements.guestsTab;
+            else activeTabEl = dashboardElements.bannedTab;
+
+            if (activeTabEl) {
+                activeTabEl.classList.remove('text-gray-500', 'hover:text-gray-700');
+                activeTabEl.classList.add('text-primary-600', 'border-b-2', 'border-primary-500');
             }
-            
-            activeTabEl.classList.remove('text-gray-500', 'hover:text-gray-700');
-            activeTabEl.classList.add('text-primary-600', 'border-b-2', 'border-primary-500');
-            
-            // Update active tab and reapply filters
+
             activeTab = tab;
             applyFilters();
         }
 
         // Event Listeners
         document.addEventListener('DOMContentLoaded', () => {
+            clearLocalStorage();
             checkAuth();
-            
-            // Login form submission
-            loginButton.addEventListener('click', () => {
-                const id = adminIdInput.value;
-                const password = adminPasswordInput.value;
-                
-                if (id === adminCredentials.id && password === adminCredentials.password) {
-                    localStorage.setItem('adminLoggedIn', 'true');
-                    checkAuth();
-                    showToast('Login Successful', 'Welcome to the Admin Dashboard', 'success');
-                } else {
-                    loginError.classList.remove('hidden');
-                    document.getElementById('errorMessage').textContent = 'Invalid credentials. Please try again.';
-                }
+
+            // Login form
+            authElements.loginForm.addEventListener('submit', handleLogin);
+
+            // Toggle password
+            dashboardElements.togglePassword.addEventListener('click', () => {
+                const type = authElements.passwordInput.type === 'password' ? 'text' : 'password';
+                authElements.passwordInput.type = type;
+                dashboardElements.togglePassword.innerHTML = type === 'password' ? '<i class="fas fa-eye"></i>' : '<i class="fas fa-eye-slash"></i>';
             });
-            
-            // Toggle password visibility
-            togglePassword.addEventListener('click', () => {
-                const type = adminPasswordInput.getAttribute('type') === 'password' ? 'text' : 'password';
-                adminPasswordInput.setAttribute('type', type);
-                togglePassword.innerHTML = type === 'password' ? '<i class="fas fa-eye"></i>' : '<i class="fas fa-eye-slash"></i>';
-            });
-            
-            // Search and filter
-            userSearchInput.addEventListener('input', applyFilters);
-            roleFilter.addEventListener('change', applyFilters);
-            statusFilter.addEventListener('change', applyFilters);
-            
+
+            // Filters
+            dashboardElements.userSearchInput.addEventListener('input', applyFilters);
+            dashboardElements.roleFilter.addEventListener('change', applyFilters);
+            dashboardElements.statusFilter.addEventListener('change', applyFilters);
+
             // Pagination
-            prevPage.addEventListener('click', () => {
+            dashboardElements.prevPage.addEventListener('click', () => {
                 if (currentPage > 1) {
                     currentPage--;
-                    currentPageNum.textContent = currentPage;
+                    dashboardElements.currentPageNum.textContent = currentPage;
                     renderTable();
                 }
             });
-            
-            nextPage.addEventListener('click', () => {
-                const maxPage = Math.ceil(filteredUsers.length / itemsPerPage);
-                if (currentPage < maxPage) {
+
+            dashboardElements.nextPage.addEventListener('click', () => {
+                if ((currentPage * itemsPerPage) < filteredUsers.length) {
                     currentPage++;
-                    currentPageNum.textContent = currentPage;
+                    dashboardElements.currentPageNum.textContent = currentPage;
                     renderTable();
                 }
             });
-            
-            // Page size select
-            pageSizeSelect.addEventListener('change', () => {
-                itemsPerPage = parseInt(pageSizeSelect.value);
+
+            dashboardElements.pageSizeSelect.addEventListener('change', () => {
+                itemsPerPage = parseInt(dashboardElements.pageSizeSelect.value);
                 currentPage = 1;
-                currentPageNum.textContent = currentPage;
+                dashboardElements.currentPageNum.textContent = currentPage;
                 renderTable();
             });
-            
-            // Tab navigation
-            allUsersTab.addEventListener('click', () => setActiveTab('all'));
-            moderatorsTab.addEventListener('click', () => setActiveTab('moderators'));
-            usersTab.addEventListener('click', () => setActiveTab('users'));
-            guestsTab.addEventListener('click', () => setActiveTab('guests'));
-            bannedTab.addEventListener('click', () => setActiveTab('banned'));
-            
-            // Edit user form
-            editUserForm.addEventListener('submit', (e) => {
+
+            // Tabs
+            dashboardElements.allUsersTab.addEventListener('click', () => setActiveTab('all'));
+            dashboardElements.moderatorsTab.addEventListener('click', () => setActiveTab('moderators'));
+            dashboardElements.usersTab.addEventListener('click', () => setActiveTab('users'));
+            dashboardElements.guestsTab.addEventListener('click', () => setActiveTab('guests'));
+            dashboardElements.bannedTab.addEventListener('click', () => setActiveTab('banned'));
+
+            // Edit user
+            dashboardElements.editUserForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
-                
-                const userId = editUserId.value;
-                const userIndex = users.findIndex(u => u.id.toString() === userId);
-                
-                if (userIndex !== -1) {
-                    users[userIndex].name = editName.value;
-                    users[userIndex].email = editEmail.value;
-                    users[userIndex].role = editRole.value;
-                    users[userIndex].status = editStatus.value;
-                    
-                    editUserModal.classList.add('hidden');
-                    updateDashboard();
-                    showToast('User Updated', 'User information has been updated successfully.', 'success');
+                const userId = dashboardElements.editUserForm.dataset.userId;
+                const user = users.find(u => u.id == userId);
+                const newRole = dashboardElements.editRole.value;
+
+                if (user && user.role !== 'guest' && newRole === 'guest') {
+                    showConfirmationModal(
+                        'Demote to Guest',
+                        'Are you sure you want to demote this user to a guest? This will remove their persistent account details and cannot be undone.',
+                        'danger',
+                        async () => {
+                            await submitUserEdit(userId);
+                        }
+                    );
+                } else {
+                    await submitUserEdit(userId);
                 }
             });
-            
+
             // Close edit modal
-            closeEditModal.addEventListener('click', () => {
-                editUserModal.classList.add('hidden');
-            });
-            
-            cancelEdit.addEventListener('click', () => {
-                editUserModal.classList.add('hidden');
-            });
-            
-            // Modal cancel button
-            cancelAction.addEventListener('click', () => {
-                confirmationModal.classList.add('hidden');
-            });
-            
-            // Close toast
-            closeToast.addEventListener('click', () => {
-                toastNotification.classList.add('opacity-0', 'translate-y-2');
-                setTimeout(() => {
-                    toastNotification.classList.add('hidden');
-                    toastNotification.classList.remove('opacity-0', 'translate-y-2');
-                }, 300);
-            });
-            
+            dashboardElements.closeEditModal.addEventListener('click', () => dashboardElements.editUserModal.classList.add('hidden'));
+            dashboardElements.cancelEdit.addEventListener('click', () => dashboardElements.editUserModal.classList.add('hidden'));
+
+            // Cancel confirmation
+            dashboardElements.cancelAction.addEventListener('click', () => dashboardElements.confirmationModal.classList.add('hidden'));
+
             // Profile dropdown
-            profileDropdownButton.addEventListener('click', () => {
-                profileDropdown.classList.toggle('hidden');
+            dashboardElements.profileDropdownButton.addEventListener('click', () => {
+                dashboardElements.profileDropdown.classList.toggle('hidden');
             });
-            
-            // Close dropdown when clicking outside
+
             document.addEventListener('click', (event) => {
-                if (!profileDropdownButton.contains(event.target) && !profileDropdown.contains(event.target)) {
-                    profileDropdown.classList.add('hidden');
+                if (!dashboardElements.profileDropdownButton.contains(event.target) && !dashboardElements.profileDropdown.contains(event.target)) {
+                    dashboardElements.profileDropdown.classList.add('hidden');
                 }
             });
-            
+
             // Logout
-            logoutButton.addEventListener('click', () => {
-                localStorage.removeItem('adminLoggedIn');
-                checkAuth();
+            dashboardElements.logoutButton.addEventListener('click', async () => {
+                try {
+                    await fetch('/api/admin/logout', {
+                        method: 'POST',
+                        credentials: 'include'
+                    });
+                    await checkAuth();
+                } catch (err) {
+                    console.error('Logout error:', err);
+                    showToast('Error', 'Failed to log out.', 'error');
+                }
             });
-            
+
+            dashboardElements.mobileLogout.addEventListener('click', async () => {
+                try {
+                    await fetch('/api/admin/logout', {
+                        method: 'POST',
+                        credentials: 'include'
+                    });
+                    await checkAuth();
+                    dashboardElements.mobileMenu.classList.add('hidden');
+                } catch (err) {
+                    console.error('Logout error:', err);
+                    showToast('Error', 'Failed to log out.', 'error');
+                }
+            });
+
             // Mobile menu
-            menuBtn.addEventListener('click', () => {
-                mobileMenu.classList.remove('hidden');
-            });
-            
-            closeMenu.addEventListener('click', () => {
-                mobileMenu.classList.add('hidden');
-            });
-            
-            mobileLogout.addEventListener('click', () => {
-                localStorage.removeItem('adminLoggedIn');
-                checkAuth();
-                mobileMenu.classList.add('hidden');
+            dashboardElements.menuBtn.addEventListener('click', () => dashboardElements.mobileMenu.classList.toggle('hidden'));
+            dashboardElements.closeMenu.addEventListener('click', () => dashboardElements.mobileMenu.classList.add('hidden'));
+
+            // Close toast
+            dashboardElements.closeToast.addEventListener('click', () => {
+                dashboardElements.toastNotification.classList.add('hidden');
             });
         });
     </script>
