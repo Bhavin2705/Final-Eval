@@ -5,9 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Profile Page</title>
-    <!-- <link rel="stylesheet" href="styles.css"> -->
-    <!-- Font Awesome for icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Font Awesome 6.6.0 to match homePage.ejs -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
     <style>
         /* Base styles */
         :root {
@@ -43,6 +42,7 @@
 
         .container {
             max-width: 800px;
+            width: 100%;
             margin: 0 auto;
             padding: 2rem 1rem;
         }
@@ -328,7 +328,7 @@
         /* Responsive */
         @media (max-width: 640px) {
             .container {
-                padding: 1rem;
+                padding: 1rem 0.75rem;
             }
 
             .profile-avatar {
@@ -340,10 +340,231 @@
                 font-size: 1.5rem;
             }
 
+            .profile-email {
+                font-size: 0.875rem;
+            }
+
             .card-header,
             .card-content,
             .card-footer {
                 padding: 1rem;
+            }
+
+            .tabs {
+                gap: 0.25rem;
+            }
+
+            .tab-button {
+                padding: 0.5rem 0.75rem;
+                font-size: 0.875rem;
+            }
+
+            input,
+            textarea {
+                padding: 0.5rem;
+                font-size: 0.875rem;
+            }
+
+            .submit-button {
+                padding: 0.5rem;
+                font-size: 0.875rem;
+            }
+
+            .upload-button {
+                padding: 0.4rem 0.75rem;
+                font-size: 0.75rem;
+            }
+
+            .upload-hint {
+                font-size: 0.75rem;
+            }
+
+            .icon-button {
+                width: 2rem;
+                height: 2rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 0.75rem 0.5rem;
+            }
+
+            .profile-avatar {
+                width: 80px;
+                height: 80px;
+            }
+
+            .profile-name {
+                font-size: 1.25rem;
+            }
+
+            .profile-email {
+                font-size: 0.75rem;
+            }
+
+            .tabs {
+                grid-template-columns: 1fr;
+                gap: 0.25rem;
+            }
+
+            .tab-button {
+                padding: 0.4rem 0.5rem;
+                font-size: 0.75rem;
+            }
+
+            .card-header,
+            .card-content,
+            .card-footer {
+                padding: 0.75rem;
+            }
+
+            .card-title {
+                font-size: 1rem;
+            }
+
+            .card-description {
+                font-size: 0.75rem;
+            }
+
+            label {
+                font-size: 0.75rem;
+            }
+
+            input,
+            textarea {
+                padding: 0.4rem;
+                font-size: 0.75rem;
+            }
+
+            textarea {
+                min-height: 100px;
+            }
+
+            .submit-button {
+                padding: 0.4rem;
+                font-size: 0.75rem;
+            }
+
+            .upload-container {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.5rem;
+            }
+
+            .upload-button {
+                padding: 0.3rem 0.5rem;
+                font-size: 0.7rem;
+            }
+
+            .upload-hint {
+                font-size: 0.7rem;
+            }
+
+            .password-toggle {
+                padding: 0 0.5rem;
+            }
+
+            .icon-button {
+                width: 1.75rem;
+                height: 1.75rem;
+            }
+
+            .requirements-title {
+                font-size: 0.75rem;
+            }
+
+            .requirements-list {
+                font-size: 0.7rem;
+                padding-left: 1rem;
+            }
+        }
+
+        @media (max-width: 300px) {
+            .container {
+                padding: 0.5rem 0.25rem;
+            }
+
+            .profile-avatar {
+                width: 64px;
+                height: 64px;
+            }
+
+            .profile-name {
+                font-size: 1rem;
+            }
+
+            .profile-email {
+                font-size: 0.7rem;
+            }
+
+            .tabs {
+                gap: 0.2rem;
+            }
+
+            .tab-button {
+                padding: 0.3rem 0.4rem;
+                font-size: 0.7rem;
+            }
+
+            .card-header,
+            .card-content,
+            .card-footer {
+                padding: 0.5rem;
+            }
+
+            .card-title {
+                font-size: 0.875rem;
+            }
+
+            .card-description {
+                font-size: 0.7rem;
+            }
+
+            label {
+                font-size: 0.7rem;
+            }
+
+            input,
+            textarea {
+                padding: 0.3rem;
+                font-size: 0.7rem;
+            }
+
+            textarea {
+                min-height: 80px;
+            }
+
+            .submit-button {
+                padding: 0.3rem;
+                font-size: 0.7rem;
+            }
+
+            .upload-button {
+                padding: 0.25rem 0.4rem;
+                font-size: 0.65rem;
+            }
+
+            .upload-hint {
+                font-size: 0.65rem;
+            }
+
+            .password-toggle {
+                padding: 0 0.4rem;
+            }
+
+            .icon-button {
+                width: 1.5rem;
+                height: 1.5rem;
+            }
+
+            .requirements-title {
+                font-size: 0.7rem;
+            }
+
+            .requirements-list {
+                font-size: 0.65rem;
+                padding-left: 0.75rem;
             }
         }
     </style>
@@ -357,7 +578,7 @@
                     <img src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-G9y9zdBMGxzuob6IDkm8zBhLxxIpAw.png"
                         alt="Profile Picture" id="profile-image">
                     <div class="avatar-overlay">
-                        <button class="icon-button">
+                        <button class="icon-button" id="upload-profile-picture">
                             <i class="fas fa-camera"></i>
                         </button>
                     </div>
@@ -483,232 +704,260 @@
 
     <script>
         document.addEventListener("DOMContentLoaded", async () => {
-            // Fetch profile data on page load
+            // Fetch profile data on page load, aligned with /api/me from homePage.ejs
             const fetchProfileData = async () => {
                 try {
-                    const response = await fetch("/api/profile", {
-                        method: "GET",
-                        headers: {
-                            "Content-Type": "application/json",
-                            "Authorization": `Bearer ${localStorage.getItem("token")}`,
-                        },
+                    // Load from localStorage first
+                    const storedName = localStorage.getItem('profileName');
+                    const storedEmail = localStorage.getItem('profileEmail');
+                    const storedBio = localStorage.getItem('profileBio');
+                    const storedImage = localStorage.getItem('profilePicture');
+
+                    // Populate with localStorage data if available
+                    document.getElementById('name').value = storedName || 'Guest';
+                    document.getElementById('email').value = storedEmail || '';
+                    document.getElementById('bio').value = storedBio || '';
+                    document.getElementById('profile-name').textContent = storedName || 'Guest';
+                    document.getElementById('profile-email').textContent = storedEmail || 'No email provided';
+                    document.getElementById('profile-image').src = storedImage || 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-G9y9zdBMGxzuob6IDkm8zBhLxxIpAw.png';
+
+                    // Try fetching from /api/me for server data (fallback if localStorage is empty)
+                    const response = await fetch('/api/me', {
+                        method: 'GET',
+                        credentials: 'include' // Use session-based auth like homePage.ejs
                     });
 
                     if (!response.ok) {
-                        throw new Error("Failed to fetch profile data");
+                        throw new Error(`Failed to fetch profile data: ${response.status} ${response.statusText}`);
                     }
 
-                    const profileData = await response.json();
+                    const data = await response.json();
+                    const profileData = data.user || {};
 
-                    // Populate form fields
-                    document.getElementById("name").value = profileData.name || "";
-                    document.getElementById("email").value = profileData.email || "";
-                    document.getElementById("bio").value = profileData.bio || "";
-                    document.getElementById("profile-image").src = profileData.profilePicture || "default-image-url.png";
-                    document.getElementById("profile-name").textContent = profileData.name || "Jill Nichols";
-                    document.getElementById("profile-email").textContent = profileData.email || "jill.nichols@example.com";
+                    // Update fields only if localStorage is empty
+                    if (!storedName) {
+                        document.getElementById('name').value = profileData.name || 'Guest';
+                        document.getElementById('profile-name').textContent = profileData.name || 'Guest';
+                    }
+                    if (!storedEmail) {
+                        document.getElementById('email').value = profileData.email || '';
+                        document.getElementById('profile-email').textContent = profileData.email || 'No email provided';
+                    }
+                    if (!storedBio) {
+                        document.getElementById('bio').value = profileData.bio || '';
+                    }
+                    if (!storedImage) {
+                        document.getElementById('profile-image').src = profileData.profilePicture || 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-G9y9zdBMGxzuob6IDkm8zBhLxxIpAw.png';
+                    }
                 } catch (error) {
-                    console.error("Error fetching profile data:", error);
-                    alert("Failed to load profile data. Please try again.");
+                    console.error('Error fetching profile data:', error);
+                    alert('Failed to load profile data from server. Using local data.');
                 }
             };
 
             await fetchProfileData();
 
             // Tab switching
-            const tabButtons = document.querySelectorAll(".tab-button");
-            const tabContents = document.querySelectorAll(".tab-content");
+            const tabButtons = document.querySelectorAll('.tab-button');
+            const tabContents = document.querySelectorAll('.tab-content');
 
-            tabButtons.forEach((button) => {
-                button.addEventListener("click", () => {
-                    // Remove active class from all buttons and contents
-                    tabButtons.forEach((btn) => btn.classList.remove("active"));
-                    tabContents.forEach((content) => content.classList.remove("active"));
+            tabButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    tabButtons.forEach(btn => btn.classList.remove('active'));
+                    tabContents.forEach(content => content.classList.remove('active'));
 
-                    // Add active class to clicked button and corresponding content
-                    button.classList.add("active");
-                    const tabId = button.getAttribute("data-tab");
-                    document.getElementById(`${tabId}-tab`).classList.add("active");
+                    button.classList.add('active');
+                    const tabId = button.getAttribute('data-tab');
+                    document.getElementById(`${tabId}-tab`).classList.add('active');
                 });
             });
 
             // Edit mode toggle
-            const editToggle = document.getElementById("edit-toggle");
-            const nameInput = document.getElementById("name");
-            const emailInput = document.getElementById("email");
-            const bioInput = document.getElementById("bio");
-            const profilePictureGroup = document.getElementById("profile-picture-group");
-            const saveProfileButton = document.getElementById("save-profile-button");
+            const editToggle = document.getElementById('edit-toggle');
+            const nameInput = document.getElementById('name');
+            const emailInput = document.getElementById('email');
+            const bioInput = document.getElementById('bio');
+            const profilePictureGroup = document.getElementById('profile-picture-group');
+            const saveProfileButton = document.getElementById('save-profile-button');
             let isEditing = false;
 
-            editToggle.addEventListener("click", () => {
+            editToggle.addEventListener('click', () => {
                 isEditing = !isEditing;
 
-                // Toggle edit icon
                 editToggle.innerHTML = isEditing ? '<i class="fas fa-save"></i>' : '<i class="fas fa-edit"></i>';
-
-                // Toggle input disabled state
                 nameInput.disabled = !isEditing;
                 emailInput.disabled = !isEditing;
                 bioInput.disabled = !isEditing;
-
-                // Toggle profile picture upload and save button visibility
-                profilePictureGroup.style.display = isEditing ? "block" : "none";
-                saveProfileButton.style.display = isEditing ? "block" : "none";
+                profilePictureGroup.style.display = isEditing ? 'block' : 'none';
+                saveProfileButton.style.display = isEditing ? 'block' : 'none';
             });
 
             // Password visibility toggle
-            const passwordToggles = document.querySelectorAll(".password-toggle");
+            const passwordToggles = document.querySelectorAll('.password-toggle');
 
-            passwordToggles.forEach((toggle) => {
-                toggle.addEventListener("click", () => {
+            passwordToggles.forEach(toggle => {
+                toggle.addEventListener('click', () => {
                     const input = toggle.previousElementSibling;
-                    const icon = toggle.querySelector("i");
+                    const icon = toggle.querySelector('i');
 
-                    if (input.type === "password") {
-                        input.type = "text";
-                        icon.classList.remove("fa-eye");
-                        icon.classList.add("fa-eye-slash");
+                    if (input.type === 'password') {
+                        input.type = 'text';
+                        icon.classList.remove('fa-eye');
+                        icon.classList.add('fa-eye-slash');
                     } else {
-                        input.type = "password";
-                        icon.classList.remove("fa-eye-slash");
-                        icon.classList.add
-                        icon.classList.add("fa-eye");
+                        input.type = 'password';
+                        icon.classList.remove('fa-eye-slash');
+                        icon.classList.add('fa-eye');
                     }
                 });
             });
 
-            // Handle profile picture upload
-            const uploadButton = document.getElementById("upload-button");
-            const profileImage = document.getElementById("profile-image");
+            // Handle profile picture upload (store in localStorage)
+            const uploadButton = document.getElementById('upload-button');
+            const profileImageButton = document.getElementById('upload-profile-picture');
+            const profileImage = document.getElementById('profile-image');
 
-            uploadButton.addEventListener("click", async () => {
-                const fileInput = document.createElement("input");
-                fileInput.type = "file";
-                fileInput.accept = "image/*";
+            const handleProfilePictureUpload = async (file) => {
+                if (!file) return;
+
+                try {
+                    // Validate file size (1MB max, as per upload-hint)
+                    if (file.size > 1024 * 1024) {
+                        throw new Error('File size exceeds 1MB limit');
+                    }
+
+                    // Convert file to Base64
+                    const reader = new FileReader();
+                    reader.readAsDataURL(file);
+                    reader.onload = () => {
+                        const base64Image = reader.result;
+
+                        // Store in localStorage
+                        try {
+                            localStorage.setItem('profilePicture', base64Image);
+                        } catch (error) {
+                            throw new Error('Failed to store image in localStorage: Storage may be full');
+                        }
+
+                        // Update profile image
+                        profileImage.src = base64Image;
+                        alert('Profile picture updated successfully!');
+                    };
+                    reader.onerror = () => {
+                        throw new Error('Failed to read image file');
+                    };
+                } catch (error) {
+                    console.error('Error uploading profile picture:', error);
+                    alert(`Failed to upload profile picture: ${error.message}`);
+                }
+            };
+
+            // Upload via button in form
+            uploadButton.addEventListener('click', () => {
+                const fileInput = document.createElement('input');
+                fileInput.type = 'file';
+                fileInput.accept = 'image/*';
                 fileInput.onchange = async (e) => {
                     const file = e.target.files[0];
-
-                    if (file) {
-                        const formData = new FormData();
-                        formData.append("profilePicture", file);
-
-                        try {
-                            const response = await fetch("/api/upload-profile-picture", {
-                                method: "POST",
-                                headers: {
-                                    "Authorization": `Bearer ${localStorage.getItem("token")}`,
-                                },
-                                body: formData,
-                            });
-
-                            if (!response.ok) {
-                                throw new Error("Failed to upload profile picture");
-                            }
-
-                            const result = await response.json();
-                            profileImage.src = result.profilePictureUrl;
-                            alert("Profile picture updated successfully!");
-                        } catch (error) {
-                            console.error("Error uploading profile picture:", error);
-                            alert("Failed to upload profile picture. Please try again.");
-                        }
-                    }
+                    await handleProfilePictureUpload(file);
                 };
-
                 fileInput.click();
             });
 
-            // Handle profile form submission
-            const profileForm = document.getElementById("profile-form");
+            // Upload via avatar overlay button
+            profileImageButton.addEventListener('click', () => {
+                const fileInput = document.createElement('input');
+                fileInput.type = 'file';
+                fileInput.accept = 'image/*';
+                fileInput.onchange = async (e) => {
+                    const file = e.target.files[0];
+                    await handleProfilePictureUpload(file);
+                };
+                fileInput.click();
+            });
 
-            profileForm.addEventListener("submit", async (e) => {
+            // Handle profile form submission (store in localStorage)
+            const profileForm = document.getElementById('profile-form');
+
+            profileForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
 
-                // Get form data
                 const formData = {
                     name: nameInput.value,
                     email: emailInput.value,
-                    bio: bioInput.value,
+                    bio: bioInput.value
                 };
 
                 try {
-                    const response = await fetch("/api/profile", {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/json",
-                            "Authorization": `Bearer ${localStorage.getItem("token")}`,
-                        },
-                        body: JSON.stringify(formData),
-                    });
-
-                    if (!response.ok) {
-                        throw new Error("Failed to update profile");
+                    // Store in localStorage
+                    try {
+                        localStorage.setItem('profileName', formData.name);
+                        localStorage.setItem('profileEmail', formData.email);
+                        localStorage.setItem('profileBio', formData.bio);
+                    } catch (error) {
+                        throw new Error('Failed to store profile data in localStorage: Storage may be full');
                     }
 
-                    // Toggle back to view mode
+                    // Update UI
+                    document.getElementById('profile-name').textContent = formData.name || 'Guest';
+                    document.getElementById('profile-email').textContent = formData.email || 'No email provided';
+
+                    // Exit edit mode
                     isEditing = false;
                     editToggle.innerHTML = '<i class="fas fa-edit"></i>';
                     nameInput.disabled = true;
                     emailInput.disabled = true;
                     bioInput.disabled = true;
-                    profilePictureGroup.style.display = "none";
-                    saveProfileButton.style.display = "none";
+                    profilePictureGroup.style.display = 'none';
+                    saveProfileButton.style.display = 'none';
 
-                    // Update displayed name and email
-                    document.getElementById("profile-name").textContent = formData.name;
-                    document.getElementById("profile-email").textContent = formData.email;
-
-                    alert("Profile updated successfully!");
+                    alert('Profile updated successfully!');
                 } catch (error) {
-                    console.error("Error updating profile:", error);
-                    alert("Failed to update profile. Please try again.");
+                    console.error('Error updating profile:', error);
+                    alert(`Failed to update profile: ${error.message}`);
                 }
             });
 
             // Handle password form submission
-            const passwordForm = document.getElementById("password-form");
+            const passwordForm = document.getElementById('password-form');
 
-            passwordForm.addEventListener("submit", async (e) => {
+            passwordForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
 
-                // Get form data
-                const currentPassword = document.getElementById("current-password").value;
-                const newPassword = document.getElementById("new-password").value;
-                const confirmPassword = document.getElementById("confirm-password").value;
+                const currentPassword = document.getElementById('current-password').value;
+                const newPassword = document.getElementById('new-password').value;
+                const confirmPassword = document.getElementById('confirm-password').value;
 
-                // Basic validation
                 if (!currentPassword || !newPassword || !confirmPassword) {
-                    alert("Please fill in all password fields");
+                    alert('Please fill in all password fields');
                     return;
                 }
 
                 if (newPassword !== confirmPassword) {
-                    alert("New passwords do not match");
+                    alert('New passwords do not match');
                     return;
                 }
 
                 try {
-                    const response = await fetch("/api/change-password", {
-                        method: "POST",
+                    const response = await fetch('/api/change-password', {
+                        method: 'POST',
                         headers: {
-                            "Content-Type": "application/json",
-                            "Authorization": `Bearer ${localStorage.getItem("token")}`,
+                            'Content-Type': 'application/json'
                         },
-                        body: JSON.stringify({ currentPassword, newPassword }),
+                        credentials: 'include',
+                        body: JSON.stringify({ currentPassword, newPassword })
                     });
 
                     if (!response.ok) {
-                        throw new Error("Failed to update password");
+                        const errorData = await response.json().catch(() => ({}));
+                        throw new Error(`Failed to update password: ${response.status} ${response.statusText} - ${errorData.message || 'Unknown error'}`);
                     }
 
-                    // Reset form
                     passwordForm.reset();
-
-                    alert("Password updated successfully!");
+                    alert('Password updated successfully!');
                 } catch (error) {
-                    console.error("Error updating password:", error);
-                    alert("Failed to update password. Please try again.");
+                    console.error('Error updating password:', error);
+                    alert(`Failed to update password: ${error.message}`);
                 }
             });
         });

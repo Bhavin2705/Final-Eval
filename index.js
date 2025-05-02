@@ -5,6 +5,7 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
 const session = require('express-session');
 const MongoStore = require('connect-mongo');
+const axios = require('axios');
 const multer = require('multer');
 const userModel = require('./userModel');
 const postModel = require('./postModel');
@@ -1111,6 +1112,25 @@ app.use((err, req, res, next) => {
         return res.status(400).json({ message: err.message });
     }
     res.status(500).json({ message: 'Internal server error', error: err.message });
+});
+
+app.get('/reddit-posts', async (req, res, next) => {
+    const subreddit = req.query.subreddit || 'technology';
+    const after = req.query.after || '';
+    if (!/^[a-zA-Z0-9_]+$/.test(subreddit)) {
+        return res.status(400).json({ error: 'Invalid subreddit name' });
+    }
+    try {
+        const response = await axios.get(`https://www.reddit.com/r/${subreddit}/new.json?after=${after}`, {
+            headers: { 'User-Agent': 'SocialApp/1.0' }
+        });
+        if (response.status !== 200) {
+            throw new Error(`Reddit API returned status: ${response.status}`);
+        }
+        res.json(response.data);
+    } catch (err) {
+        next(err);
+    }
 });
 
 // Start server

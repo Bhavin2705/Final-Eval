@@ -258,8 +258,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 <button class="w-full px-4 py-2 bg-blue-500 text-white rounded post-comment-btn">Post Comment</button>
                 <div class="comments-container mt-4">
                     ${comments.map((comment, index) => {
-                        console.log(`Comment ${index} for post ${post._id}: author=${comment.author}, user=${user ? user.name : 'none'}`);
-                        return `
+            console.log(`Comment ${index} for post ${post._id}: author=${comment.author}, user=${user ? user.name : 'none'}`);
+            return `
                             <div class="comment mb-2 p-2 bg-gray-100 rounded flex justify-between items-start" data-comment-index="${index}">
                                 <div class="comment-content">
                                     <span class="font-medium">${comment.author}</span>
@@ -278,7 +278,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 </div>
                             </div>
                         `;
-                    }).join('')}
+        }).join('')}
                 </div>
             </div>
         `;
@@ -576,25 +576,36 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Story management with RandomUser.me
-    async function fetchRandomUserStories() {
+    async function fetchRandomIndianUsers() {
         try {
-            console.log('Fetching stories from RandomUser.me');
-            const response = await fetch('https://randomuser.me/api/?results=3');
+            console.log('Fetching Indian users from RandomUser.me');
+            // Fetch 3 Indian users (nat=IN for India)
+            const response = await fetch('https://randomuser.me/api/?results=3&nat=IN');
+
             if (response.ok) {
                 const data = await response.json();
-                const stories = data.results.map(user => ({
-                    media: user.picture.medium,
-                    username: `${user.name.first} ${user.name.last}`
+                const users = data.results.map(user => ({
+                    firstName: user.name.first,
+                    image: user.picture.large // Use larger image for better quality
                 }));
-                console.log('Fetched RandomUser stories:', stories);
-                return stories;
+
+                console.log('Fetched Indian users:', users);
+                return users;
             } else {
-                console.error('Failed to fetch RandomUser stories:', response.status);
-                return [];
+                console.error('Failed to fetch Indian users:', response.status);
+                return [
+                    { firstName: 'Aarav', image: 'https://via.placeholder.com/64' },
+                    { firstName: 'Vivaan', image: 'https://via.placeholder.com/64' },
+                    { firstName: 'Aditya', image: 'https://via.placeholder.com/64' }
+                ]; // Fallback Indian names
             }
         } catch (error) {
-            console.error('Error fetching RandomUser stories:', error);
-            return [];
+            console.error('Error fetching Indian users:', error);
+            return [
+                { firstName: 'Aarav', image: 'https://via.placeholder.com/64' },
+                { firstName: 'Vivaan', image: 'https://via.placeholder.com/64' },
+                { firstName: 'Aditya', image: 'https://via.placeholder.com/64' }
+            ]; // Fallback Indian names
         }
     }
 
@@ -645,7 +656,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function updateStories() {
         const localStories = getLocalStories();
-        const randomStories = await fetchRandomUserStories();
+        const indianUsers = await fetchRandomIndianUsers();
+        const randomStories = indianUsers.map(user => ({
+            media: user.image,
+            username: user.firstName
+        }));
         const allStories = [...localStories, ...randomStories];
         renderStories(allStories);
     }
