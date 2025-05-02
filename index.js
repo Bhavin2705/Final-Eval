@@ -1,501 +1,877 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
-const fs = require('fs').promises;
 const axios = require('axios');
 const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
-const { hash } = require('crypto');
+const session = require('express-session');
+const MongoStore = require('connect-mongo');
+const multer = require('multer');
 const userModel = require('./userModel');
+const postModel = require('./postModel');
+const messageModel = require('./messageModel');
+const friendRequestModel = require('./friendRequestModel');
+const reportModel = require('./reportModel');
+const warningModel = require('./warningModel');
+const storyModel = require('./storyModel');
+const mimeTypes = require('./config/mime');
 
 const app = express();
 const PORT = process.env.PORT || 7000;
+const MONGO_URI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/socialweb';
 
 // Connect to MongoDB
-mongoose.connect('mongodb://127.0.0.1:27017/socialweb')
-  .then(() => console.log('Connected to MongoDB'))
-  .catch(err => console.error('MongoDB connection error:', err));
+mongoose.connect(MONGO_URI)
+    .then(() => console.log('Connected to MongoDB'))
+    .catch(err => console.error('MongoDB connection error:', err));
 
-// Enable CORS for all routes
-app.use(cors());
+// Enable CORS with specific origins
+app.use(cors({
+    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+    credentials: true
+}));
 
-// File paths
-const FILES = {
-    users: path.join(__dirname, 'users.json'),
-    messages: path.join(__dirname, 'messages.json'), // Handles chats/messages
-    posts: path.join(__dirname, 'posts.json'),       // Handles posts
-    friendRequests: path.join(__dirname, 'friendRequests.json')
-};
+// Session middleware
+app.use(session({
+    secret: process.env.SESSION_SECRET || 'your-secret-key',
+    resave: false,
+    saveUninitialized: false,
+    store: MongoStore.create({ mongoUrl: MONGO_URI }),
+    cookie: {
+        secure: process.env.NODE_ENV === 'production',
+        maxAge: 24 * 60 * 60 * 1000, // 24 hours
+        sameSite: 'strict'
+    }
+}));
 
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static(path.join(__dirname, 'public')));
+
+// Multer setup for file uploads
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, 'public/uploads/');
+    },
+    filename: (req, file, cb) => {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        cb(null, uniqueSuffix + path.extname(file.originalName));
+    }
+});
+const upload = multer({
+    storage,
+    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+    fileFilter: (req, file, cb) => {
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'video/mp4'];
+        if (allowedTypes.includes(file.mimetype)) {
+            cb(null, true);
+        } else {
+            cb(new Error('Invalid file type. Only JPEG, PNG, GIF, and MP4 are allowed.'));
+        }
+    }
+});
+
+// Static file serving
+app.use('/components', express.static(path.join(__dirname, 'public', 'components'), {
+    setHeaders: (res, filePath) => {
+        const ext = path.extname(filePath);
+        if (mimeTypes[ext]) {
+            res.setHeader('Content-Type', mimeTypes[ext]);
+        }
+    }
+}));
+app.use('/uploads', express.static(path.join(__dirname, 'public', 'uploads')));
+app.use(express.static(path.join(__dirname, 'public'), {
+    setHeaders: (res, filePath) => {
+        const ext = path.extname(filePath);
+        if (mimeTypes[ext]) {
+            res.setHeader('Content-Type', mimeTypes[ext]);
+        }
+    }
+}));
+
+// EJS setup
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
-// Ensure file exists and read data
-async function readFileData(filePath) {
-    try {
-        await fs.access(filePath);
-    } catch {
-        await fs.writeFile(filePath, JSON.stringify([]));
-    }
-    const data = await fs.readFile(filePath, 'utf8');
-    return JSON.parse(data || '[]');
-}
-
-// Write data to file
-async function writeFileData(filePath, data) {
-    await fs.writeFile(filePath, JSON.stringify(data, null, 2));
-}
-
-// ====================== ROUTES ======================
-
-// Static Routes
-app.get(['/', '/messages', '/explore', '/register', '/login'], (req, res) => {
-    const page = req.path === '/' ? 'homePage' : req.path.slice(1);
-    res.sendFile(path.join(__dirname, 'public', `${page}.html`));
-});
-
-// User/Auth Routes
-app.post('/register', async (req, res) => {
-    try {
-        const { name, email, password } = req.body;
-        
-        // Validate required fields
-        if (!name || !email || !password) {
-            return res.status(400).json({ message: 'Missing required fields' });
-        }
-
-        // Check if user already exists
-        const existingUser = await userModel.findOne({ email });
-        if (existingUser) {
-            return res.status(400).json({ message: 'User already exists' });
-        }
-
-        // Hash password
-        const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(password, salt);
-
-        // Create new user
-        const newUser = await userModel.create({
-            name,
-            email,
-            password: hashedPassword
-        });
-
-        res.status(201).json({ 
-            message: 'User registered successfully',
-            user: {
-                id: newUser._id,
-                name: newUser.name,
-                email: newUser.email
+// Authentication middleware
+const checkAuth = async (req, res, next) => {
+    if (req.session.userId) {
+        try {
+            const user = await userModel.findById(req.session.userId);
+            if (user) {
+                req.user = user;
+                return next();
             }
-        });
+        } catch (err) {
+            return next(err);
+        }
+    }
+    res.status(401).json({ message: 'Unauthorized' });
+};
+
+const checkOwnerAuth = async (req, res, next) => {
+    if (req.session.userId) {
+        try {
+            const user = await userModel.findById(req.session.userId);
+            if (user && user.role === 'owner') {
+                req.user = user;
+                return next();
+            }
+        } catch (err) {
+            return next(err);
+        }
+    }
+    res.status(403).json({ message: 'Forbidden: Owner access required' });
+};
+
+const checkModAuth = async (req, res, next) => {
+    if (req.session.userId) {
+        try {
+            const user = await userModel.findById(req.session.userId);
+            if (user && user.role === 'moderator') {
+                req.user = user;
+                return next();
+            }
+        } catch (err) {
+            return next(err);
+        }
+    }
+    res.status(403).json({ message: 'Forbidden: Moderator access required' });
+};
+
+// Validate ObjectId
+const validateObjectId = (id, res) => {
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+        res.status(400).json({ message: 'Invalid ID format' });
+        return false;
+    }
+    return true;
+};
+
+// Public Static Routes
+app.get(['/', '/register', '/login', '/owner', '/moderator'], async (req, res, next) => {
+    try {
+        const page = req.path === '/' ? 'homePage' : req.path.slice(1);
+        if (req.path === '/') {
+            let user = null;
+            if (req.session.userId) {
+                user = await userModel.findById(req.session.userId).select('name email role');
+            }
+            res.render('homePage', { user: user || { name: 'Guest', email: 'guest', role: 'guest' } });
+        } else {
+            res.render(`${page}.ejs`);
+        }
     } catch (err) {
-        console.error('Error registering user:', err);
-        res.status(500).json({ message: 'Error registering user' });
+        next(err);
     }
 });
 
-app.post('/login', async (req, res) => {
+// Protected Static Routes
+app.get('/messages', checkAuth, (req, res) => {
+    res.render('messages.ejs');
+});
+
+app.get('/explore', checkAuth, (req, res) => {
+    res.render('explore.ejs');
+});
+
+app.get('/my-posts', checkAuth, async (req, res, next) => {
+    try {
+        const posts = await postModel.find({ userId: req.session.userId });
+        res.render('my-posts.ejs', { posts });
+    } catch (err) {
+        next(err);
+    }
+});
+
+app.get('/bookmarks', checkAuth, (req, res) => {
+    res.render('bookmarks.ejs');
+});
+
+app.get('/admin', checkOwnerAuth, (req, res) => {
+    res.render('admin.ejs');
+});
+
+app.get('/moderator-dashboard', checkModAuth, (req, res) => {
+    res.render('moderator-dashboard.ejs');
+});
+
+// Current User Route
+app.get('/api/me', async (req, res, next) => {
+    try {
+        if (req.session.userId) {
+            const user = await userModel.findById(req.session.userId).select('name email role');
+            if (user) {
+                return res.json({ user });
+            }
+        }
+        res.json({ user: { name: 'Guest', email: 'guest', role: 'guest' } });
+    } catch (err) {
+        next(err);
+    }
+});
+
+// Login Route (Regular Users)
+app.post('/login', async (req, res, next) => {
     try {
         const { email, password } = req.body;
-
-        // Validate required fields
         if (!email || !password) {
             return res.status(400).json({ message: 'Missing email or password' });
         }
-
-        // Find user from MongoDB
         const user = await userModel.findOne({ email });
-
         if (!user) {
             return res.status(401).json({ message: 'Invalid email or password' });
         }
-
-        // Verify password
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
             return res.status(401).json({ message: 'Invalid email or password' });
         }
-        // Normal User Login Success
-        return res.json({
-            message: 'Login successful',
+        if (user.role !== 'user') {
+            return res.status(403).json({ message: 'Please use the designated login page for your role' });
+        }
+        req.session.userId = user._id;
+        await userModel.updateOne({ _id: user._id }, { lastLogin: new Date().toISOString() });
+        res.json({
+            message: 'User login successful',
+            user: { id: user._id, name: user.name, email: user.email, role: user.role }
+        });
+    } catch (err) {
+        next(err);
+    }
+});
+
+// Owner Login Route
+app.post('/api/owner/login', async (req, res, next) => {
+    try {
+        const { email, password } = req.body;
+        if (!email || !password) {
+            return res.status(400).json({ message: 'Missing email or password' });
+        }
+        const owner = await userModel.findOne({ email, role: 'owner' });
+        if (!owner) {
+            return res.status(401).json({ message: 'Invalid owner credentials' });
+        }
+        const isMatch = await bcrypt.compare(password, owner.password);
+        if (!isMatch) {
+            return res.status(401).json({ message: 'Invalid owner credentials' });
+        }
+        req.session.userId = owner._id;
+        await userModel.updateOne({ _id: owner._id }, { lastLogin: new Date().toISOString() });
+        res.json({
+            message: 'Owner login successful',
+            user: { id: owner._id, name: owner.name, email: owner.email, role: owner.role }
+        });
+    } catch (err) {
+        next(err);
+    }
+});
+
+// Moderator Login Route
+app.post('/api/moderator/login', async (req, res, next) => {
+    try {
+        const { email, password } = req.body;
+        if (!email || !password) {
+            return res.status(400).json({ message: 'Missing email or password' });
+        }
+        const moderator = await userModel.findOne({ email, role: 'moderator' });
+        if (!moderator) {
+            return res.status(401).json({ message: 'Invalid moderator credentials' });
+        }
+        const isMatch = await bcrypt.compare(password, moderator.password);
+        if (!isMatch) {
+            return res.status(401).json({ message: 'Invalid moderator credentials' });
+        }
+        req.session.userId = moderator._id;
+        await userModel.updateOne({ _id: moderator._id }, { lastLogin: new Date().toISOString() });
+        res.json({
+            message: 'Moderator login successful',
+            user: { id: moderator._id, name: moderator.name, email: moderator.email, role: moderator.role }
+        });
+    } catch (err) {
+        next(err);
+    }
+});
+
+// Logout Route
+app.post('/logout', (req, res, next) => {
+    req.session.destroy(err => {
+        if (err) {
+            return next(err);
+        }
+        res.json({ message: 'Logged out' });
+    });
+});
+
+// User/Auth Routes
+app.post('/register', async (req, res, next) => {
+    try {
+        const { name, email, password } = req.body;
+        if (!name || !email || !password) {
+            return res.status(400).json({ message: 'Missing required fields' });
+        }
+        const existingUser = await userModel.findOne({ email });
+        if (existingUser) {
+            return res.status(400).json({ message: 'User already exists' });
+        }
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
+        const newUser = await userModel.create({
+            name,
+            email,
+            password: hashedPassword,
+            role: 'user',
+            status: 'active',
+            lastLogin: new Date().toISOString()
+        });
+        res.status(201).json({
+            message: 'User registered successfully',
+            user: { id: newUser._id, name: newUser.name, email: newUser.email, role: newUser.role }
+        });
+    } catch (err) {
+        next(err);
+    }
+});
+
+// Owner Routes
+app.get('/api/owner/me', checkOwnerAuth, async (req, res, next) => {
+    try {
+        const user = await userModel.findById(req.session.userId);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        res.json({
+            user: { id: user._id, name: user.name, email: user.email, role: user.role }
+        });
+    } catch (err) {
+        next(err);
+    }
+});
+
+// User Management Routes
+app.post('/api/users', checkOwnerAuth, async (req, res, next) => {
+    try {
+        const { name, email, role, password } = req.body;
+        if (!name || !email || !role || !password) {
+            return res.status(400).json({ message: 'Missing required fields' });
+        }
+        if (!['owner', 'admin', 'moderator', 'user'].includes(role)) {
+            return res.status(400).json({ message: 'Invalid role' });
+        }
+        const existingUser = await userModel.findOne({ email });
+        if (existingUser) {
+            return res.status(400).json({ message: 'User already exists' });
+        }
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
+        const newUser = await userModel.create({
+            name,
+            email,
+            password: hashedPassword,
+            role,
+            status: 'active',
+            lastLogin: new Date().toISOString()
+        });
+        res.status(201).json({
+            user: {
+                id: newUser._id,
+                name: newUser.name,
+                email: newUser.email,
+                role: newUser.role,
+                status: newUser.status,
+                lastLogin: newUser.lastLogin
+            }
+        });
+    } catch (err) {
+        next(err);
+    }
+});
+
+app.get('/api/users', checkOwnerAuth, async (req, res, next) => {
+    try {
+        const users = await userModel.find().select('_id name email role status lastLogin');
+        res.json({
+            users: users.map(user => ({
+                id: user._id,
+                name: user.name,
+                email: user.email,
+                role: user.role,
+                status: user.status,
+                lastLogin: user.lastLogin
+            }))
+        });
+    } catch (err) {
+        next(err);
+    }
+});
+
+app.patch('/api/users', checkOwnerAuth, async (req, res, next) => {
+    try {
+        const { id, name, email, role, status } = req.body;
+        if (!id || !validateObjectId(id, res)) {
+            return;
+        }
+        const user = await userModel.findById(id);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        const updateData = {};
+        if (name) updateData.name = name;
+        if (email) {
+            const existingUser = await userModel.findOne({ email, _id: { $ne: id } });
+            if (existingUser) {
+                return res.status(400).json({ message: 'Email already in use' });
+            }
+            updateData.email = email;
+        }
+        if (role && ['owner', 'admin', 'moderator', 'user'].includes(role)) {
+            updateData.role = role;
+        }
+        if (status && ['active', 'inactive', 'banned'].includes(status)) {
+            updateData.status = status;
+        }
+        const updatedUser = await userModel.findByIdAndUpdate(id, updateData, { new: true });
+        if (!updatedUser) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        res.json({
+            user: {
+                id: updatedUser._id,
+                name: updatedUser.name,
+                email: updatedUser.email,
+                role: updatedUser.role,
+                status: updatedUser.status,
+                lastLogin: updatedUser.lastLogin
+            }
+        });
+    } catch (err) {
+        next(err);
+    }
+});
+
+app.patch('/api/users/demote', checkOwnerAuth, async (req, res, next) => {
+    try {
+        const { id, fromRole } = req.body;
+        if (!id || !fromRole || !['admin', 'moderator'].includes(fromRole)) {
+            return res.status(400).json({ message: 'Invalid id or fromRole' });
+        }
+        if (!validateObjectId(id, res)) {
+            return;
+        }
+        const user = await userModel.findById(id);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        if (user.role !== fromRole) {
+            return res.status(400).json({ message: `User is not a ${fromRole}` });
+        }
+        user.role = 'user';
+        await user.save();
+        res.json({
             user: {
                 id: user._id,
                 name: user.name,
-                email: user.email
+                email: user.email,
+                role: user.role,
+                status: user.status,
+                lastLogin: user.lastLogin
             }
         });
-
     } catch (err) {
-        console.error('Error logging in:', err);
-        res.status(500).json({ message: 'Error logging in' });
+        next(err);
     }
 });
 
-
-
-// app.get('/ownerlogin', async (req, res) => {
-//     res.sendFile(path.join(__dirname, 'public', 'ownerlogin.html'));
-// });
-app.get('/owner',(req,res)=>{
-    res.sendFile(path.join(__dirname, 'public', 'ownerlogin.html'));
-})
-
-
-app.get('/admin', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'admin.html'));
-});
-
-app.get('/profile', async (req, res) => {
+app.patch('/api/users/ban', checkOwnerAuth, async (req, res, next) => {
     try {
-        const data = await readFileData(FILES.users);
-        res.render('profile.ejs', { user: data[0] || {} });
+        const { id } = req.body;
+        if (!id || !validateObjectId(id, res)) {
+            return;
+        }
+        const user = await userModel.findById(id);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        if (user.status === 'banned') {
+            return res.status(400).json({ message: 'User is already banned' });
+        }
+        user.status = 'banned';
+        await user.save();
+        res.json({
+            user: {
+                id: user._id,
+                name: user.name,
+                email: user.email,
+                role: user.role,
+                status: user.status,
+                lastLogin: user.lastLogin
+            }
+        });
     } catch (err) {
-        console.error('Error fetching profile:', err);  
-        res.status(500).json({ message: 'Error fetching profile', error: err.message });
+        next(err);
     }
 });
 
-app.post('/api/profile/update', async (req, res) => {
+app.patch('/api/users/unban', checkOwnerAuth, async (req, res, next) => {
+    try {
+        const { id } = req.body;
+        if (!id || !validateObjectId(id, res)) {
+            return;
+        }
+        const user = await userModel.findById(id);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        if (user.status !== 'banned') {
+            return res.status(400).json({ message: 'User is not banned' });
+        }
+        user.status = 'active';
+        await user.save();
+        res.json({
+            user: {
+                id: user._id,
+                name: user.name,
+                email: user.email,
+                role: user.role,
+                status: user.status,
+                lastLogin: user.lastLogin
+            }
+        });
+    } catch (err) {
+        next(err);
+    }
+});
+
+app.delete('/api/users', checkOwnerAuth, async (req, res, next) => {
+    try {
+        const { id } = req.body;
+        if (!id || !validateObjectId(id, res)) {
+            return;
+        }
+        const user = await userModel.findById(id);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        await userModel.deleteOne({ _id: id });
+        res.json({ message: 'User deleted' });
+    } catch (err) {
+        next(err);
+    }
+});
+
+// Moderator Routes
+app.get('/api/moderator/reports', checkModAuth, async (req, res, next) => {
+    try {
+        const reports = await reportModel.find();
+        res.json(reports);
+    } catch (err) {
+        next(err);
+    }
+});
+
+app.post('/api/moderator/warnings', checkModAuth, async (req, res, next) => {
+    try {
+        const { userId, reason, message } = req.body;
+        if (!userId || !reason || !message || !validateObjectId(userId, res)) {
+            return;
+        }
+        const newWarning = await warningModel.create({
+            userId,
+            reason,
+            message
+        });
+        res.json({ message: 'Warning issued', warning: newWarning });
+    } catch (err) {
+        next(err);
+    }
+});
+
+// Profile Routes
+app.get('/profile', checkAuth, async (req, res, next) => {
+    try {
+        const user = await userModel.findById(req.session.userId);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        res.render('profile.ejs', {
+            user: { id: user._id, name: user.name, email: user.email, role: user.role }
+        });
+    } catch (err) {
+        next(err);
+    }
+});
+
+app.patch('/api/profile/update', checkAuth, async (req, res, next) => {
     try {
         const { name, email } = req.body;
-        const data = await readFileData(FILES.users);
-        if (data[0]) {
-            data[0] = { ...data[0], name, email };
-            await writeFileData(FILES.users, data);
-            res.json({ message: 'Profile updated', user: data[0] });
-        } else {
-            res.status(404).json({ message: 'User not found' });
+        if (!name || !email) {
+            return res.status(400).json({ message: 'Name and email are required' });
         }
+        const existingUser = await userModel.findOne({ email, _id: { $ne: req.session.userId } });
+        if (existingUser) {
+            return res.status(400).json({ message: 'Email already in use' });
+        }
+        const user = await userModel.findByIdAndUpdate(
+            req.session.userId,
+            { name, email },
+            { new: true }
+        );
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        res.json({
+            message: 'Profile updated',
+            user: { id: user._id, name: user.name, email: user.email, role: user.role }
+        });
     } catch (err) {
-        console.error('Error updating profile:', err);
-        res.status(500).json({ message: 'Error updating profile', error: err.message });
+        next(err);
     }
 });
 
-app.post('/api/profile/password', async (req, res) => {
+app.patch('/api/profile/password', checkAuth, async (req, res, next) => {
     try {
         const { newPassword } = req.body;
-        const data = await readFileData(FILES.users);
-        if (data[0]) {
-            data[0].password = newPassword;
-            await writeFileData(FILES.users, data);
-            res.json({ message: 'Password updated' });
-        } else {
-            res.status(404).json({ message: 'User not found' });
+        if (!newPassword) {
+            return res.status(400).json({ message: 'New password required' });
         }
-    } catch (err) {
-        console.error('Error updating password:', err);
-        res.status(500).json({ message: 'Error updating password', error: err.message });
-    }
-});
-
-// ====================== POSTS ROUTES ======================
-
-// Create a new post
-app.post('/api/posts', async (req, res) => {
-    try {
-        const { content, userId } = req.body;
-        const data = await readFileData(FILES.posts);
-        const newPost = {
-            id: data.length + 1, // Assign sequential ID
-            userId: userId || 'test-user',
-            content,
-            timestamp: new Date().toISOString(),
-            likes: [],
-            shares: [],
-            comments: [],
-            bookmarks: []
-        };
-        data.push(newPost);
-        await writeFileData(FILES.posts, data);
-        res.json({ message: 'Post created', post: newPost });
-    } catch (err) {
-        console.error('Error creating post:', err);
-        res.status(500).json({ message: 'Error creating post', error: err.message });
-    }
-});
-
-// Fetch all posts
-app.get('/api/posts', async (req, res) => {
-    try {
-        const data = await readFileData(FILES.posts);
-        res.json(data);
-    } catch (err) {
-        console.error('Error fetching posts:', err);
-        res.status(500).json({ message: 'Error fetching posts', error: err.message });
-    }
-});
-
-// Update a post
-app.put('/api/posts', async (req, res) => {
-    try {
-        const { id, content } = req.body;
-        const data = await readFileData(FILES.posts);
-        const postIndex = data.findIndex(p => p.id === id);
-        if (postIndex !== -1) {
-            data[postIndex].content = content;
-            await writeFileData(FILES.posts, data);
-            res.json({ message: 'Post updated', post: data[postIndex] });
-        } else {
-            res.status(404).json({ message: 'Post not found' });
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(newPassword, salt);
+        const user = await userModel.findByIdAndUpdate(
+            req.session.userId,
+            { password: hashedPassword },
+            { new: true }
+        );
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
         }
+        res.json({ message: 'Password updated' });
     } catch (err) {
-        console.error('Error updating post:', err);
-        res.status(500).json({ message: 'Error updating post', error: err.message });
+        next(err);
     }
 });
 
-// Delete a post
-app.delete('/api/posts', async (req, res) => {
+// Posts Routes
+app.post('/api/posts', checkAuth, upload.single('fileUpload'), async (req, res, next) => {
     try {
-        const { id } = req.query;
-        let data = await readFileData(FILES.posts);
-        data = data.filter(p => p.id !== Number(id));
-        await writeFileData(FILES.posts, data);
+        const { content, linkInput } = req.body;
+        if (!content && !req.file && !linkInput) {
+            return res.status(400).json({ message: 'Content, file, or link is required' });
+        }
+        const newPost = await postModel.create({
+            userId: req.session.userId,
+            content: content || '',
+            file: req.file ? `/uploads/${req.file.filename}` : null,
+            link: linkInput || null,
+            createdAt: new Date()
+        });
+        const populatedPost = await postModel.findById(newPost._id).populate('userId', 'name email');
+        res.json({ message: 'Post created', post: populatedPost });
+    } catch (err) {
+        next(err);
+    }
+});
+
+app.get('/api/posts', async (req, res, next) => {
+    try {
+        const posts = await postModel.find().populate('userId', 'name email').sort({ createdAt: -1 });
+        res.json(posts);
+    } catch (err) {
+        next(err);
+    }
+});
+
+app.patch('/api/posts', checkAuth, async (req, res, next) => {
+    try {
+        const { id, content, link } = req.body;
+        if (!id || !content || !validateObjectId(id, res)) {
+            return;
+        }
+        const updateData = { content };
+        if (link !== undefined) updateData.link = link;
+        const post = await postModel.findOneAndUpdate(
+            { _id: id, userId: req.session.userId },
+            updateData,
+            { new: true }
+        ).populate('userId', 'name email');
+        if (!post) {
+            return res.status(404).json({ message: 'Post not found or unauthorized' });
+        }
+        res.json({ message: 'Post updated', post });
+    } catch (err) {
+        next(err);
+    }
+});
+
+app.delete('/api/posts', checkAuth, async (req, res, next) => {
+    try {
+        const { id } = req.body;
+        if (!id || !validateObjectId(id, res)) {
+            return;
+        }
+        const post = await postModel.findOneAndDelete({ _id: id, userId: req.session.userId });
+        if (!post) {
+            return res.status(404).json({ message: 'Post not found or unauthorized' });
+        }
         res.json({ message: 'Post deleted' });
     } catch (err) {
-        console.error('Error deleting post:', err);
-        res.status(500).json({ message: 'Error deleting post', error: err.message });
+        next(err);
     }
 });
 
-// Like a post
-app.post('/api/posts/:id/like', async (req, res) => {
+// Messages Routes
+app.post('/api/messages', checkAuth, async (req, res, next) => {
     try {
-        const { id } = req.params;
-        const data = await readFileData(FILES.posts);
-        const postIndex = data.findIndex(p => p.id === Number(id));
-        if (postIndex !== -1 && !data[postIndex].likes.includes('test-user')) {
-            data[postIndex].likes.push('test-user');
-            await writeFileData(FILES.posts, data);
+        const { message, recipientId } = req.body;
+        if (!message || !recipientId || !validateObjectId(recipientId, res)) {
+            return;
         }
-        res.json({ message: 'Post liked', likes: data[postIndex]?.likes });
-    } catch (err) {
-        console.error('Error liking post:', err);
-        res.status(500).json({ message: 'Error liking post', error: err.message });
-    }
-});
-
-// Unlike a post
-app.post('/api/posts/:id/unlike', async (req, res) => {
-    try {
-        const { id } = req.params;
-        const data = await readFileData(FILES.posts);
-        const postIndex = data.findIndex(p => p.id === Number(id));
-        if (postIndex !== -1) {
-            data[postIndex].likes = data[postIndex].likes.filter(user => user !== 'test-user');
-            await writeFileData(FILES.posts, data);
-        }
-        res.json({ message: 'Post unliked', likes: data[postIndex]?.likes });
-    } catch (err) {
-        console.error('Error unliking post:', err);
-        res.status(500).json({ message: 'Error unliking post', error: err.message });
-    }
-});
-
-// Comment on a post
-app.post('/api/posts/:id/comment', async (req, res) => {
-    try {
-        const { id } = req.params;
-        const { content } = req.body;
-        const data = await readFileData(FILES.posts);
-        const postIndex = data.findIndex(p => p.id === Number(id));
-        if (postIndex !== -1) {
-            const comment = { id: data[postIndex].comments.length + 1, userId: 'test-user', content, timestamp: new Date().toISOString() };
-            data[postIndex].comments.push(comment);
-            await writeFileData(FILES.posts, data);
-            res.json({ message: 'Comment added', comment });
-        } else {
-            res.status(404).json({ message: 'Post not found' });
-        }
-    } catch (err) {
-        console.error('Error commenting on post:', err);
-        res.status(500).json({ message: 'Error commenting on post', error: err.message });
-    }
-});
-
-// Update a comment on a post
-app.put('/api/posts/:id/comment/:commentId', async (req, res) => {
-    try {
-        const { id, commentId } = req.params;
-        const { content } = req.body;
-        const data = await readFileData(FILES.posts);
-        const postIndex = data.findIndex(p => p.id === Number(id));
-        if (postIndex !== -1) {
-            const commentIndex = data[postIndex].comments.findIndex(c => c.id === Number(commentId));
-            if (commentIndex !== -1) {
-                data[postIndex].comments[commentIndex].content = content;
-                await writeFileData(FILES.posts, data);
-                res.json({ message: 'Comment updated', comment: data[postIndex].comments[commentIndex] });
-            } else {
-                res.status(404).json({ message: 'Comment not found' });
-            }
-        } else {
-            res.status(404).json({ message: 'Post not found' });
-        }
-    } catch (err) {
-        console.error('Error updating comment:', err);
-        res.status(500).json({ message: 'Error updating comment', error: err.message });
-    }
-});
-
-// Delete a comment on a post
-app.delete('/api/posts/:id/comment/:commentId', async (req, res) => {
-    try {
-        const { id, commentId } = req.params;
-        const data = await readFileData(FILES.posts);
-        const postIndex = data.findIndex(p => p.id === Number(id));
-        if (postIndex !== -1) {
-            data[postIndex].comments = data[postIndex].comments.filter(c => c.id !== Number(commentId));
-            await writeFileData(FILES.posts, data);
-            res.json({ message: 'Comment deleted' });
-        } else {
-            res.status(404).json({ message: 'Post not found' });
-        }
-    } catch (err) {
-        console.error('Error deleting comment:', err);
-        res.status(500).json({ message: 'Error deleting comment', error: err.message });
-    }
-});
-
-// Bookmark a post
-app.post('/api/posts/:id/bookmark', async (req, res) => {
-    try {
-        const { id } = req.params;
-        const data = await readFileData(FILES.posts);
-        const postIndex = data.findIndex(p => p.id === Number(id));
-        if (postIndex !== -1 && !data[postIndex].bookmarks.includes('test-user')) {
-            data[postIndex].bookmarks.push('test-user');
-            await writeFileData(FILES.posts, data);
-        }
-        res.json({ message: 'Post bookmarked', bookmarks: data[postIndex]?.bookmarks });
-    } catch (err) {
-        console.error('Error bookmarking post:', err);
-        res.status(500).json({ message: 'Error bookmarking post', error: err.message });
-    }
-});
-
-// Unbookmark a post
-app.post('/api/posts/:id/unbookmark', async (req, res) => {
-    try {
-        const { id } = req.params;
-        const data = await readFileData(FILES.posts);
-        const postIndex = data.findIndex(p => p.id === Number(id));
-        if (postIndex !== -1) {
-            data[postIndex].bookmarks = data[postIndex].bookmarks.filter(user => user !== 'test-user');
-            await writeFileData(FILES.posts, data);
-        }
-        res.json({ message: 'Post unbookmarked', bookmarks: data[postIndex]?.bookmarks });
-    } catch (err) {
-        console.error('Error unbookmarking post:', err);
-        res.status(500).json({ message: 'Error unbookmarking post', error: err.message });
-    }
-});
-
-// ====================== MESSAGES ROUTES ======================
-
-// Create a new message (chat)
-app.post('/api/messages', async (req, res) => {
-    try {
-        const { message, userId } = req.body;
-        const data = await readFileData(FILES.messages);
-        const newMessage = {
-            id: data.length + 1, // Assign sequential ID
-            userId: userId || 'test-user',
+        const newMessage = await messageModel.create({
+            userId: req.session.userId,
+            recipientId,
             message,
-            timestamp: new Date().toISOString()
-        };
-        data.push(newMessage);
-        await writeFileData(FILES.messages, data);
+            read: false
+        });
         res.json({ message: 'Message sent', chat: newMessage });
     } catch (err) {
-        console.error('Error sending message:', err);
-        res.status(500).json({ message: 'Error sending message', error: err.message });
+        next(err);
     }
 });
 
-// Fetch all messages (chats)
-app.get('/api/messages', async (req, res) => {
+app.get('/api/messages', checkAuth, async (req, res, next) => {
     try {
-        const data = await readFileData(FILES.messages);
-        res.json(data);
+        const messages = await messageModel.find({
+            $or: [{ userId: req.session.userId }, { recipientId: req.session.userId }]
+        }).populate('userId recipientId', 'name email');
+        res.json(messages);
     } catch (err) {
-        console.error('Error fetching messages:', err);
-        res.status(500).json({ message: 'Error fetching messages', error: err.message });
+        next(err);
     }
 });
 
-// ====================== FRIEND REQUESTS ROUTES ======================
-
-// Send a friend request
-app.post('/api/friend-requests', async (req, res) => {
+app.get('/api/messages/unread-count', checkAuth, async (req, res, next) => {
     try {
-        const { userId, friendId } = req.body;
-        const data = await readFileData(FILES.friendRequests);
-        const request = { id: data.length + 1, userId, friendId, status: 'pending' }; // Assign sequential ID
-        data.push(request);
-        await writeFileData(FILES.friendRequests, data);
-        res.json({ message: 'Friend request sent', request });
+        const count = await messageModel.countDocuments({
+            recipientId: req.session.userId,
+            read: false
+        });
+        res.json({ count });
     } catch (err) {
-        console.error('Error sending friend request:', err);
-        res.status(500).json({ message: 'Error sending friend request', error: err.message });
+        next(err);
     }
 });
 
-// Fetch all friend requests
-app.get('/api/friend-requests', async (req, res) => {
+// Friend Requests Routes
+app.post('/api/friend-requests', checkAuth, async (req, res, next) => {
     try {
-        const data = await readFileData(FILES.friendRequests);
-        res.json(data);
+        const { friendId } = req.body;
+        if (!friendId || !validateObjectId(friendId, res)) {
+            return;
+        }
+        const existingRequest = await friendRequestModel.findOne({
+            userId: req.session.userId,
+            friendId,
+            status: 'pending'
+        });
+        if (existingRequest) {
+            return res.status(400).json({ message: 'Friend request already sent' });
+        }
+        const newRequest = await friendRequestModel.create({
+            userId: req.session.userId,
+            friendId,
+            status: 'pending'
+        });
+        res.json({ message: 'Friend request sent', request: newRequest });
     } catch (err) {
-        console.error('Error fetching friend requests:', err);
-        res.status(500).json({ message: 'Error fetching friend requests', error: err.message });
+        next(err);
     }
 });
 
-// Update friend request status
-app.put('/api/friend-requests/:id', async (req, res) => {
+app.get('/api/friend-requests', checkAuth, async (req, res, next) => {
+    try {
+        const requests = await friendRequestModel.find({
+            $or: [{ userId: req.session.userId }, { friendId: req.session.userId }]
+        }).populate('userId friendId', 'name email');
+        res.json(requests);
+    } catch (err) {
+        next(err);
+    }
+});
+
+app.patch('/api/friend-requests/:id', checkAuth, async (req, res, next) => {
     try {
         const { id } = req.params;
         const { status } = req.body;
-        const data = await readFileData(FILES.friendRequests);
-        const requestIndex = data.findIndex(r => r.id === Number(id));
-        if (requestIndex !== -1) {
-            data[requestIndex].status = status;
-            await writeFileData(FILES.friendRequests, data);
-            res.json({ message: 'Friend request updated', request: data[requestIndex] });
-        } else {
-            res.status(404).json({ message: 'Friend request not found' });
+        if (!id || !validateObjectId(id, res)) {
+            return;
         }
+        if (!status || !['accepted', 'rejected'].includes(status)) {
+            return res.status(400).json({ message: 'Valid status is required' });
+        }
+        const request = await friendRequestModel.findOneAndUpdate(
+            { _id: id, friendId: req.session.userId },
+            { status },
+            { new: true }
+        );
+        if (!request) {
+            return res.status(404).json({ message: 'Friend request not found or unauthorized' });
+        }
+        res.json({ message: 'Friend request updated', request });
     } catch (err) {
-        console.error('Error updating friend request:', err);
-        res.status(500).json({ message: 'Error updating friend request', error: err.message });
+        next(err);
     }
 });
 
-// Delete a friend request
-app.delete('/api/friend-requests/:id', async (req, res) => {
+app.delete('/api/friend-requests/:id', checkAuth, async (req, res, next) => {
     try {
         const { id } = req.params;
-        let data = await readFileData(FILES.friendRequests);
-        data = data.filter(r => r.id !== Number(id));
-        await writeFileData(FILES.friendRequests, data);
+        if (!id || !validateObjectId(id, res)) {
+            return;
+        }
+        const request = await friendRequestModel.findOneAndDelete({
+            _id: id,
+            $or: [{ userId: req.session.userId }, { friendId: req.session.userId }]
+        });
+        if (!request) {
+            return res.status(404).json({ message: 'Friend request not found or unauthorized' });
+        }
         res.json({ message: 'Friend request deleted' });
     } catch (err) {
-        console.error('Error deleting friend request:', err);
-        res.status(500).json({ message: 'Error deleting friend request', error: err.message });
+        next(err);
     }
 });
 
-// ====================== EXTERNAL API ROUTES ======================
+// Story Routes
+app.post('/api/stories', checkAuth, upload.single('media'), async (req, res, next) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ message: 'Media is required' });
+        }
+        const story = await storyModel.create({
+            userId: req.session.userId,
+            media: `/uploads/${req.file.filename}`,
+            username: req.user.name,
+            createdAt: new Date()
+        });
+        res.json({ message: 'Story created', story });
+    } catch (err) {
+        next(err);
+    }
+});
 
-// Fetch Reddit posts
-app.get('/reddit-posts', async (req, res) => {
+app.get('/api/stories', async (req, res, next) => {
+    try {
+        const stories = await storyModel.find()
+            .populate('userId', 'name email')
+            .sort({ createdAt: -1 })
+            .limit(10);
+        res.json(stories);
+    } catch (err) {
+        next(err);
+    }
+});
+
+// Reddit Route
+app.get('/reddit-posts', async (req, res, next) => {
     const subreddit = req.query.subreddit || 'technology';
     const after = req.query.after || '';
     if (!/^[a-zA-Z0-9_]+$/.test(subreddit)) {
@@ -503,29 +879,24 @@ app.get('/reddit-posts', async (req, res) => {
     }
     try {
         const response = await axios.get(`https://www.reddit.com/r/${subreddit}/new.json?after=${after}`, {
-            headers: {
-                'User-Agent': 'SocialApp/1.0'
-            }
+            headers: { 'User-Agent': 'SocialApp/1.0' }
         });
         if (response.status !== 200) {
             throw new Error(`Reddit API returned status: ${response.status}`);
         }
         res.json(response.data);
     } catch (err) {
-        console.error('Error fetching Reddit posts:', err);
-        res.status(500).json({ message: 'Error fetching Reddit posts', error: err.message });
+        next(err);
     }
 });
 
-// Fetch user's own posts
-app.get('/my-posts', async (req, res) => {
-    try {
-        const data = await readFileData(FILES.posts);
-        res.json(data);
-    } catch (err) {
-        console.error('Error fetching my posts:', err);
-        res.status(500).json({ message: 'Error fetching my posts', error: err.message });
+// Global Error Handling Middleware
+app.use((err, req, res, next) => {
+    console.error(`Error on ${req.method} ${req.url}:`, err.message);
+    if (err.message.includes('Invalid file type')) {
+        return res.status(400).json({ message: err.message });
     }
+    res.status(500).json({ message: 'Internal server error', error: err.message });
 });
 
 // Start server

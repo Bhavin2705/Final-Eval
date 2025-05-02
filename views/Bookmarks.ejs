@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bookmarks</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="./components/css/Bookmarks.css">
+</head>
+
+<body class="bg-gray-50">
+    <nav class="bg-white shadow-md fixed w-full top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <h1 class="text-2xl font-bold text-gray-900">My Bookmarks</h1>
+                </div>
+                <a href="/"
+                    class="flex items-center px-4 py-2 my-auto border rounded-md text-white bg-blue-600 hover:bg-blue-700">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                    </svg>
+                    Back to home
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="pt-20 pb-10 px-4">
+        <div id="bookmarks" class="feed-container space-y-6"></div>
+    </main>
+
+    <div id="modal" class="hidden fixed inset-0 bg-black/50 z-50">
+        <div
+            class="bg-white rounded-lg p-6 max-w-lg w-full mx-4 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-bold">Comments</h3>
+                <button class="modal-close hover:text-gray-700">×</button>
+            </div>
+            <div id="modal-content" class="space-y-4"></div>
+        </div>
+    </div>
+
+    <script src="./components/js/Bookmarks.js"></script>
+</body>
+
+</html>

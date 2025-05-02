@@ -1,0 +1,1581 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Moderator Panel - Social</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" />
+    <link rel="icon" type="image/png" href="/images/icon.png" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            200: '#bae6fd',
+                            300: '#7dd3fc',
+                            400: '#38bdf8',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            800: '#075985',
+                            900: '#0c4a6e',
+                        },
+                        secondary: {
+                            50: '#fff1f2',
+                            100: '#ffe4e6',
+                            200: '#fecdd3',
+                            300: '#fda4af',
+                            400: '#fb7185',
+                            500: '#f43f5e',
+                            600: '#e11d48',
+                            700: '#be123c',
+                            800: '#9f1239',
+                            900: '#881337',
+                        }
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.3s ease-out',
+                        'slide-in': 'slideIn 0.3s ease-out',
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'bounce-slow': 'bounce 2s infinite',
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0', transform: 'translateY(10px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' }
+                        },
+                        slideIn: {
+                            '0%': { transform: 'translateX(-100%)' },
+                            '100%': { transform: 'translateX(0)' }
+                        }
+                    },
+                    boxShadow: {
+                        'soft': '0 2px 15px -3px rgba(0, 0, 0, 0.07), 0 10px 20px -2px rgba(0, 0, 0, 0.04)',
+                        'glow': '0 0 15px rgba(14, 165, 233, 0.5)',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #0ea5e9 0%, #3b82f6 100%);
+        }
+
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .table-row-hover:hover {
+            background-color: rgba(14, 165, 233, 0.05);
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        /* Animated background */
+        .animated-gradient {
+            background: linear-gradient(-45deg, #0ea5e9, #3b82f6, #f43f5e, #0ea5e9);
+            background-size: 400% 400%;
+            animation: gradient 15s ease infinite;
+        }
+
+        @keyframes gradient {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-200 shadow-sm">
+        <div class="max-w-full mx-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center space-x-32">
+                    <a href="/"
+                        class="text-2xl font-semibold hover:text-secondary-500 transition-colors ml-8 flex items-center">
+                        <span class="text-primary-600">Social</span>
+                        <span
+                            class="ml-2 text-xs font-bold bg-green-500 text-white px-2 py-0.5 rounded-md">MODERATOR</span>
+                    </a>
+                </div>
+
+                <div class="flex-1 max-w-md mx-8 hidden md:block relative">
+                    <div class="relative">
+                        <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400"
+                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                        </svg>
+                        <input type="search" id="userSearchInput"
+                            placeholder="Search users by name, email, or status..."
+                            class="w-full pl-10 pr-4 py-2 bg-gray-100 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all">
+                    </div>
+                </div>
+
+                <div class="flex items-center space-x-4">
+                    <div id="userProfileSection">
+                        <div class="relative">
+                            <button id="profileDropdownButton" class="flex items-center space-x-2 focus:outline-none">
+                                <div
+                                    class="w-10 h-10 rounded-full bg-gradient-to-r from-green-500 to-green-600 flex items-center justify-center shadow-md">
+                                    <i class="fas fa-user-shield text-white"></i>
+                                </div>
+                                <div class="text-left">
+                                    <div class="font-semibold" id="modName">Moderator</div>
+                                    <div class="text-xs text-gray-500">Moderator</div>
+                                </div>
+                                <svg class="w-4 h-4 text-gray-700" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </button>
+
+                            <div id="profileDropdown"
+                                class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 animate-fade-in">
+                                <div class="p-2">
+                                    <a href="/"
+                                        class="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md">
+                                        <i class="fas fa-home mr-2 text-primary-500"></i>
+                                        Home
+                                    </a>
+                                    <hr class="my-1 border-gray-200">
+                                    <button id="logoutButton"
+                                        class="flex items-center w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded-md">
+                                        <i class="fas fa-sign-out-alt mr-2"></i>
+                                        Logout
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Mobile Menu Button -->
+    <div class="md:hidden fixed top-4 right-4 z-50">
+        <button id="menu-btn" class="menu-btn p-2 bg-white rounded-md shadow-md">
+            <div class="w-6 h-1 bg-gray-800 mb-1"></div>
+            <div class="w-6 h-1 bg-gray-800 mb-1"></div>
+            <div class="w-6 h-1 bg-gray-800"></div>
+        </button>
+    </div>
+
+    <!-- Mobile Menu -->
+    <div id="mobile-menu" class="mobile-menu hidden fixed inset-0 bg-gray-900 bg-opacity-50 z-40">
+        <div class="bg-white w-3/4 h-full p-6 animate-slide-in">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-bold text-primary-600">Social Moderator</h2>
+                <button id="close-menu" class="text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                        </path>
+                    </svg>
+                </button>
+            </div>
+            <ul class="space-y-4">
+                <li><a href="/" class="flex items-center py-2 text-gray-700 hover:text-primary-500">
+                        <i class="fas fa-home mr-2"></i> Home
+                    </a></li>
+                <li><button id="mobile-logout" class="flex items-center py-2 text-red-600 hover:text-red-700">
+                        <i class="fas fa-sign-out-alt mr-2"></i> Logout
+                    </button></li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="container mx-auto py-6 pt-24 px-4">
+        <!-- Login Form (Initially Shown) -->
+        <div id="loginContainer"
+            class="max-w-md mx-auto bg-white rounded-xl shadow-soft p-8 mt-10 border border-gray-100">
+            <div class="text-center mb-8">
+                <div class="inline-block p-3 rounded-full bg-green-100 text-green-600 mb-4">
+                    <i class="fas fa-user-shield text-3xl"></i>
+                </div>
+                <h2 class="text-2xl font-bold text-gray-800">Moderator Login</h2>
+                <p class="text-gray-500 mt-2">Enter your credentials to access the moderator dashboard</p>
+            </div>
+            <div class="mb-4">
+                <label for="modId" class="block text-gray-700 mb-2 font-medium">Moderator ID</label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i class="fas fa-user text-gray-400"></i>
+                    </div>
+                    <input type="text" id="modId"
+                        class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all">
+                </div>
+            </div>
+            <div class="mb-6">
+                <label for="modPassword" class="block text-gray-700 mb-2 font-medium">Password</label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i class="fas fa-lock text-gray-400"></i>
+                    </div>
+                    <input type="password" id="modPassword"
+                        class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all">
+                    <div class="absolute inset-y-0 right-0 pr-3 flex items-center">
+                        <button id="togglePassword" type="button"
+                            class="text-gray-400 hover:text-gray-600 focus:outline-none">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div id="loginError" class="hidden mb-4 p-3 bg-red-50 text-red-600 text-center rounded-lg">
+                <i class="fas fa-exclamation-circle mr-2"></i>
+                <span id="errorMessage">Invalid credentials. Please try again.</span>
+            </div>
+            <button id="loginButton"
+                class="w-full bg-gradient-to-r from-green-500 to-green-600 text-white py-2 rounded-lg hover:from-green-600 hover:to-green-700 transition-all shadow-md hover:shadow-lg transform hover:scale-[1.02] active:scale-[0.98] font-medium">
+                <i class="fas fa-sign-in-alt mr-2"></i> Login
+            </button>
+        </div>
+
+        <!-- Dashboard (Initially Hidden) -->
+        <div id="dashboardContainer" class="hidden">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-800">Moderator Dashboard</h1>
+                    <p class="text-gray-500">Manage users and moderate content</p>
+                </div>
+                <div class="flex flex-wrap gap-3">
+                    <div class="relative">
+                        <select id="statusFilter"
+                            class="appearance-none bg-white border border-gray-300 rounded-lg px-4 py-2 pr-8 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all">
+                            <option value="all">All Status</option>
+                            <option value="active">Active</option>
+                            <option value="inactive">Inactive</option>
+                            <option value="reported">Reported</option>
+                        </select>
+                        <div
+                            class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                <div class="bg-white rounded-xl shadow-soft p-6 card-hover border border-gray-100">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm">Total Users</p>
+                            <h3 class="text-2xl font-bold text-gray-800" id="userCount">0</h3>
+                            <p class="text-xs text-green-500 mt-1"><i class="fas fa-arrow-up mr-1"></i> 5% from last
+                                week</p>
+                        </div>
+                        <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                            <i class="fas fa-users text-blue-500 text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-xl shadow-soft p-6 card-hover border border-gray-100">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm">Active Users</p>
+                            <h3 class="text-2xl font-bold text-gray-800" id="activeCount">0</h3>
+                            <p class="text-xs text-gray-500 mt-1">Currently active accounts</p>
+                        </div>
+                        <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                            <i class="fas fa-user-check text-green-500 text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-xl shadow-soft p-6 card-hover border border-gray-100">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm">Reported Content</p>
+                            <h3 class="text-2xl font-bold text-gray-800" id="reportCount">0</h3>
+                            <p class="text-xs text-gray-500 mt-1">Pending review</p>
+                        </div>
+                        <div class="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center">
+                            <i class="fas fa-flag text-yellow-500 text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-xl shadow-soft p-6 card-hover border border-gray-100">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm">Warnings Issued</p>
+                            <h3 class="text-2xl font-bold text-gray-800" id="warningCount">0</h3>
+                            <p class="text-xs text-gray-500 mt-1">Last 30 days</p>
+                        </div>
+                        <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+                            <i class="fas fa-exclamation-triangle text-red-500 text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- User Management Tabs -->
+            <div class="bg-white rounded-xl shadow-soft overflow-hidden border border-gray-100 mb-8">
+                <div class="border-b border-gray-200">
+                    <div class="flex overflow-x-auto">
+                        <button id="allUsersTab"
+                            class="px-6 py-4 text-primary-600 border-b-2 border-primary-500 font-medium">
+                            All Users
+                        </button>
+                        <button id="reportedTab" class="px-6 py-4 text-gray-500 hover:text-gray-700 font-medium">
+                            Reported Users
+                        </button>
+                        <button id="warnedTab" class="px-6 py-4 text-gray-500 hover:text-gray-700 font-medium">
+                            Warned Users
+                        </button>
+                    </div>
+                </div>
+
+                <!-- User Table -->
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    ID</th>
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Name</th>
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Email</th>
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Status</th>
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Last Active</th>
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Reports</th>
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="userTableBody" class="bg-white divide-y divide-gray-200">
+                            <!-- Table rows will be populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+                <div id="noResults" class="hidden p-6 text-center">
+                    <div class="inline-block p-3 rounded-full bg-gray-100 text-gray-500 mb-4">
+                        <i class="fas fa-search text-2xl"></i>
+                    </div>
+                    <p class="text-gray-500">No users found matching your search criteria.</p>
+                </div>
+                <div class="p-4 border-t border-gray-200 flex flex-col sm:flex-row justify-between items-center gap-4">
+                    <div class="text-sm text-gray-500">
+                        Showing <span id="showingCount" class="font-medium">0</span> of <span id="totalCount"
+                            class="font-medium">0</span> users
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <div class="flex items-center space-x-1">
+                            <button id="prevPage"
+                                class="px-3 py-1 border border-gray-300 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors">
+                                <i class="fas fa-chevron-left"></i>
+                            </button>
+                            <div class="text-sm text-gray-700">Page <span id="currentPageNum">1</span></div>
+                            <button id="nextPage"
+                                class="px-3 py-1 border border-gray-300 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors">
+                                <i class="fas fa-chevron-right"></i>
+                            </button>
+                        </div>
+                        <select id="pageSizeSelect"
+                            class="appearance-none bg-white border border-gray-300 rounded-lg px-3 py-1 pr-8 focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm">
+                            <option value="5">5 per page</option>
+                            <option value="10">10 per page</option>
+                            <option value="20">20 per page</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Reports Section -->
+            <div class="bg-white rounded-xl shadow-soft overflow-hidden border border-gray-100 mb-8">
+                <div class="p-6 border-b border-gray-200">
+                    <h2 class="text-xl font-bold text-gray-800">Recent Reports</h2>
+                    <p class="text-gray-500">Review and take action on reported content</p>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Report ID</th>
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    User</th>
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Content Type</th>
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Reason</th>
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Date</th>
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Status</th>
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="reportTableBody" class="bg-white divide-y divide-gray-200">
+                            <!-- Table rows will be populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+                <div id="noReports" class="hidden p-6 text-center">
+                    <div class="inline-block p-3 rounded-full bg-green-100 text-green-500 mb-4">
+                        <i class="fas fa-check text-2xl"></i>
+                    </div>
+                    <p class="text-gray-500">No pending reports to review. Great job!</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- View User Modal -->
+    <div id="viewUserModal"
+        class="hidden fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50">
+        <div class="bg-white p-6 rounded-xl max-w-md w-full shadow-xl">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-semibold text-gray-800">User Details</h3>
+                <button id="closeViewModal" class="text-gray-500 hover:text-gray-700 transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                        </path>
+                    </svg>
+                </button>
+            </div>
+            <div class="space-y-4">
+                <div class="flex items-center justify-center mb-4">
+                    <div class="w-20 h-20 rounded-full bg-gray-200 flex items-center justify-center">
+                        <i id="userAvatar" class="fas fa-user text-gray-400 text-3xl"></i>
+                    </div>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-500">User ID</p>
+                    <p id="viewUserId" class="font-medium">-</p>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-500">Name</p>
+                    <p id="viewName" class="font-medium">-</p>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-500">Email</p>
+                    <p id="viewEmail" class="font-medium">-</p>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-500">Status</p>
+                    <p id="viewStatus" class="font-medium">-</p>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-500">Reports</p>
+                    <p id="viewReports" class="font-medium">-</p>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-500">Last Active</p>
+                    <p id="viewLastActive" class="font-medium">-</p>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-500">Account Created</p>
+                    <p id="viewCreated" class="font-medium">-</p>
+                </div>
+            </div>
+            <div class="mt-6 flex justify-end space-x-4">
+                <button id="closeViewBtn"
+                    class="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-100 transition-colors">Close</button>
+                <button id="warnUserBtn"
+                    class="px-4 py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 transition-colors">Issue
+                    Warning</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- View Report Modal -->
+    <div id="viewReportModal"
+        class="hidden fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50">
+        <div class="bg-white p-6 rounded-xl max-w-lg w-full shadow-xl">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-semibold text-gray-800">Report Details</h3>
+                <button id="closeReportModal" class="text-gray-500 hover:text-gray-700 transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                        </path>
+                    </svg>
+                </button>
+            </div>
+            <div class="space-y-4">
+                <div>
+                    <p class="text-sm text-gray-500">Report ID</p>
+                    <p id="viewReportId" class="font-medium">-</p>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-500">Reported User</p>
+                    <p id="viewReportedUser" class="font-medium">-</p>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-500">Content Type</p>
+                    <p id="viewContentType" class="font-medium">-</p>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-500">Reported By</p>
+                    <p id="viewReportedBy" class="font-medium">-</p>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-500">Reason</p>
+                    <p id="viewReason" class="font-medium">-</p>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-500">Date Reported</p>
+                    <p id="viewReportDate" class="font-medium">-</p>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-500">Content</p>
+                    <div id="viewContent" class="p-3 bg-gray-50 rounded-lg text-sm">-</div>
+                </div>
+            </div>
+            <div class="mt-6 flex justify-end space-x-3">
+                <button id="ignoreReportBtn"
+                    class="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-100 transition-colors">Ignore
+                    Report</button>
+                <button id="warnReportBtn"
+                    class="px-4 py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 transition-colors">Warn
+                    User</button>
+                <button id="removeContentBtn"
+                    class="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors">Remove
+                    Content</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Warning Modal -->
+    <div id="warningModal" class="hidden fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50">
+        <div class="bg-white p-6 rounded-xl max-w-md w-full shadow-xl">
+            <div class="text-center mb-4">
+                <div class="inline-block p-3 rounded-full bg-yellow-100 text-yellow-500 mb-4">
+                    <i class="fas fa-exclamation-triangle text-2xl"></i>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-800">Issue Warning</h3>
+                <p class="text-gray-600 mt-2">Send a warning to this user for violating community guidelines.</p>
+            </div>
+            <form id="warningForm">
+                <input type="hidden" id="warningUserId">
+                <div class="mb-4">
+                    <label for="warningReason" class="block text-gray-700 mb-2 font-medium">Reason</label>
+                    <select id="warningReason"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all">
+                        <option value="inappropriate">Inappropriate Content</option>
+                        <option value="harassment">Harassment</option>
+                        <option value="spam">Spam</option>
+                        <option value="misinformation">Misinformation</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <div class="mb-6">
+                    <label for="warningMessage" class="block text-gray-700 mb-2 font-medium">Message</label>
+                    <textarea id="warningMessage" rows="3"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
+                        placeholder="Explain why this warning is being issued..."></textarea>
+                </div>
+                <div class="flex justify-end space-x-4">
+                    <button type="button" id="cancelWarning"
+                        class="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-100 transition-colors">Cancel</button>
+                    <button type="submit"
+                        class="px-4 py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 transition-colors">Send
+                        Warning</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div id="confirmationModal"
+        class="hidden fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50">
+        <div class="bg-white p-6 rounded-xl max-w-md w-full shadow-xl">
+            <div class="text-center mb-4">
+                <div id="modalIcon" class="inline-block p-3 rounded-full bg-red-100 text-red-500 mb-4">
+                    <i class="fas fa-exclamation-triangle text-2xl"></i>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-800" id="modalTitle">Confirm Action</h3>
+                <p class="text-gray-600 mt-2" id="modalMessage">Are you sure you want to perform this action?</p>
+            </div>
+            <div class="flex justify-center space-x-4 mt-6">
+                <button id="cancelAction"
+                    class="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-100 transition-colors">Cancel</button>
+                <button id="confirmAction"
+                    class="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toastNotification"
+        class="hidden fixed bottom-4 right-4 bg-white border border-gray-200 rounded-lg shadow-lg p-4 transform transition-all duration-300 z-50 max-w-sm">
+        <div class="flex items-center">
+            <div id="toastIcon" class="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center mr-4">
+                <i id="toastIconSymbol" class="fas fa-check text-lg"></i>
+            </div>
+            <div class="flex-1">
+                <h4 id="toastTitle" class="text-sm font-medium text-gray-900">Success</h4>
+                <p id="toastMessage" class="text-sm text-gray-500">Action completed successfully.</p>
+            </div>
+            <button id="closeToast" class="ml-4 text-gray-400 hover:text-gray-500">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Sample data for users (stored in localStorage)
+        const defaultUsers = [
+            { id: 1, name: 'John Doe', email: 'john@social.com', status: 'active', lastActive: '2023-06-14', reports: 0, created: '2023-01-15' },
+            { id: 2, name: 'Jane Smith', email: 'jane@social.com', status: 'active', lastActive: '2023-06-13', reports: 0, created: '2023-02-20' },
+            { id: 3, name: 'Robert Johnson', email: 'robert@social.com', status: 'inactive', lastActive: '2023-06-10', reports: 1, created: '2023-01-05' },
+            { id: 4, name: 'Emily Davis', email: 'emily@social.com', status: 'active', lastActive: '2023-06-12', reports: 0, created: '2023-03-12' },
+            { id: 5, name: 'Michael Wilson', email: 'michael@social.com', status: 'active', lastActive: '2023-06-11', reports: 0, created: '2023-02-28' },
+            { id: 6, name: 'Sarah Brown', email: 'sarah@social.com', status: 'active', lastActive: '2023-06-09', reports: 2, created: '2023-01-10' },
+            { id: 7, name: 'David Miller', email: 'david@social.com', status: 'inactive', lastActive: '2023-06-08', reports: 0, created: '2023-04-05' },
+            { id: 8, name: 'Jennifer Taylor', email: 'jennifer@social.com', status: 'active', lastActive: '2023-06-07', reports: 0, created: '2023-03-22' },
+            { id: 9, name: 'James Anderson', email: 'james@social.com', status: 'active', lastActive: '2023-06-06', reports: 1, created: '2023-02-15' },
+            { id: 10, name: 'Lisa Johnson', email: 'lisa@social.com', status: 'inactive', lastActive: '2023-06-05', reports: 0, created: '2023-01-25' },
+            { id: 11, name: 'Thomas Brown', email: 'thomas@social.com', status: 'reported', lastActive: '2023-06-04', reports: 3, created: '2023-03-01' },
+            { id: 12, name: 'Patricia Davis', email: 'patricia@social.com', status: 'active', lastActive: '2023-06-03', reports: 0, created: '2023-04-10' },
+            { id: 13, name: 'Christopher Wilson', email: 'chris@social.com', status: 'reported', lastActive: '2023-06-02', reports: 2, created: '2023-02-05' },
+            { id: 14, name: 'Mary Taylor', email: 'mary@social.com', status: 'active', lastActive: '2023-06-01', reports: 0, created: '2023-03-15' },
+            { id: 15, name: 'Guest User', email: 'guest1@social.com', status: 'inactive', lastActive: '2023-05-28', reports: 0, created: '2023-05-01' }
+        ];
+
+        // Sample data for reports
+        const defaultReports = [
+            { id: 1, userId: 11, userName: 'Thomas Brown', contentType: 'post', reason: 'Inappropriate content', date: '2023-06-13', status: 'pending', reportedBy: 'User #4', content: 'This is an example of inappropriate content that violates our community guidelines.' },
+            { id: 2, userId: 13, userName: 'Christopher Wilson', contentType: 'comment', reason: 'Harassment', date: '2023-06-12', status: 'pending', reportedBy: 'User #7', content: 'This comment contains harassment towards another user and should be reviewed.' },
+            { id: 3, userId: 3, userName: 'Robert Johnson', contentType: 'profile', reason: 'Impersonation', date: '2023-06-11', status: 'pending', reportedBy: 'User #9', content: 'This user appears to be impersonating a public figure.' },
+            { id: 4, userId: 9, userName: 'James Anderson', contentType: 'post', reason: 'Spam', date: '2023-06-10', status: 'pending', reportedBy: 'User #2', content: 'This post contains spam links and promotional content that violates our terms.' },
+            { id: 5, userId: 6, userName: 'Sarah Brown', contentType: 'comment', reason: 'Misinformation', date: '2023-06-09', status: 'pending', reportedBy: 'User #8', content: 'This comment contains factually incorrect information that could be harmful.' }
+        ];
+
+        // Moderator credentials (in a real app, this would be stored securely on the server)
+        const modCredentials = {
+            id: 'mod123',
+            password: 'mod123'
+        };
+
+        // Initialize localStorage if needed
+        function initializeLocalStorage() {
+            if (!localStorage.getItem('users')) {
+                localStorage.setItem('users', JSON.stringify(defaultUsers));
+            }
+            if (!localStorage.getItem('reports')) {
+                localStorage.setItem('reports', JSON.stringify(defaultReports));
+            }
+            if (!localStorage.getItem('warnings')) {
+                localStorage.setItem('warnings', JSON.stringify([]));
+            }
+        }
+
+        // Get data from localStorage
+        function getUsers() {
+            return JSON.parse(localStorage.getItem('users')) || [];
+        }
+
+        function getReports() {
+            return JSON.parse(localStorage.getItem('reports')) || [];
+        }
+
+        function getWarnings() {
+            return JSON.parse(localStorage.getItem('warnings')) || [];
+        }
+
+        // Save data to localStorage
+        function saveUsers(users) {
+            localStorage.setItem('users', JSON.stringify(users));
+        }
+
+        function saveReports(reports) {
+            localStorage.setItem('reports', JSON.stringify(reports));
+        }
+
+        function saveWarnings(warnings) {
+            localStorage.setItem('warnings', JSON.stringify(warnings));
+        }
+
+        // DOM Elements
+        const loginContainer = document.getElementById('loginContainer');
+        const dashboardContainer = document.getElementById('dashboardContainer');
+        const loginButton = document.getElementById('loginButton');
+        const loginError = document.getElementById('loginError');
+        const modIdInput = document.getElementById('modId');
+        const modPasswordInput = document.getElementById('modPassword');
+        const togglePassword = document.getElementById('togglePassword');
+        const userTableBody = document.getElementById('userTableBody');
+        const reportTableBody = document.getElementById('reportTableBody');
+        const userSearchInput = document.getElementById('userSearchInput');
+        const statusFilter = document.getElementById('statusFilter');
+        const noResults = document.getElementById('noResults');
+        const noReports = document.getElementById('noReports');
+        const userCount = document.getElementById('userCount');
+        const activeCount = document.getElementById('activeCount');
+        const reportCount = document.getElementById('reportCount');
+        const warningCount = document.getElementById('warningCount');
+        const showingCount = document.getElementById('showingCount');
+        const totalCount = document.getElementById('totalCount');
+        const currentPageNum = document.getElementById('currentPageNum');
+        const prevPage = document.getElementById('prevPage');
+        const nextPage = document.getElementById('nextPage');
+        const pageSizeSelect = document.getElementById('pageSizeSelect');
+        const viewUserModal = document.getElementById('viewUserModal');
+        const viewUserId = document.getElementById('viewUserId');
+        const viewName = document.getElementById('viewName');
+        const viewEmail = document.getElementById('viewEmail');
+        const viewStatus = document.getElementById('viewStatus');
+        const viewReports = document.getElementById('viewReports');
+        const viewLastActive = document.getElementById('viewLastActive');
+        const viewCreated = document.getElementById('viewCreated');
+        const closeViewModal = document.getElementById('closeViewModal');
+        const closeViewBtn = document.getElementById('closeViewBtn');
+        const warnUserBtn = document.getElementById('warnUserBtn');
+        const viewReportModal = document.getElementById('viewReportModal');
+        const viewReportId = document.getElementById('viewReportId');
+        const viewReportedUser = document.getElementById('viewReportedUser');
+        const viewContentType = document.getElementById('viewContentType');
+        const viewReportedBy = document.getElementById('viewReportedBy');
+        const viewReason = document.getElementById('viewReason');
+        const viewReportDate = document.getElementById('viewReportDate');
+        const viewContent = document.getElementById('viewContent');
+        const closeReportModal = document.getElementById('closeReportModal');
+        const ignoreReportBtn = document.getElementById('ignoreReportBtn');
+        const warnReportBtn = document.getElementById('warnReportBtn');
+        const removeContentBtn = document.getElementById('removeContentBtn');
+        const warningModal = document.getElementById('warningModal');
+        const warningForm = document.getElementById('warningForm');
+        const warningUserId = document.getElementById('warningUserId');
+        const warningReason = document.getElementById('warningReason');
+        const warningMessage = document.getElementById('warningMessage');
+        const cancelWarning = document.getElementById('cancelWarning');
+        const confirmationModal = document.getElementById('confirmationModal');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalMessage = document.getElementById('modalMessage');
+        const modalIcon = document.getElementById('modalIcon');
+        const cancelAction = document.getElementById('cancelAction');
+        const confirmAction = document.getElementById('confirmAction');
+        const profileDropdownButton = document.getElementById('profileDropdownButton');
+        const profileDropdown = document.getElementById('profileDropdown');
+        const logoutButton = document.getElementById('logoutButton');
+        const menuBtn = document.getElementById('menu-btn');
+        const mobileMenu = document.getElementById('mobile-menu');
+        const closeMenu = document.getElementById('close-menu');
+        const mobileLogout = document.getElementById('mobile-logout');
+        const toastNotification = document.getElementById('toastNotification');
+        const toastIcon = document.getElementById('toastIcon');
+        const toastIconSymbol = document.getElementById('toastIconSymbol');
+        const toastTitle = document.getElementById('toastTitle');
+        const toastMessage = document.getElementById('toastMessage');
+        const closeToast = document.getElementById('closeToast');
+
+        // Tab elements
+        const allUsersTab = document.getElementById('allUsersTab');
+        const reportedTab = document.getElementById('reportedTab');
+        const warnedTab = document.getElementById('warnedTab');
+
+        // Pagination state
+        let currentPage = 1;
+        let itemsPerPage = 5;
+        let filteredUsers = [];
+        let activeTab = 'all';
+
+        // Check if moderator is logged in
+        function checkAuth() {
+            const isLoggedIn = localStorage.getItem('modLoggedIn') === 'true';
+            if (isLoggedIn) {
+                loginContainer.classList.add('hidden');
+                dashboardContainer.classList.remove('hidden');
+                updateDashboard();
+            } else {
+                loginContainer.classList.remove('hidden');
+                dashboardContainer.classList.add('hidden');
+            }
+        }
+
+        // Update dashboard data
+        function updateDashboard() {
+            const users = getUsers();
+            const reports = getReports();
+            const warnings = getWarnings();
+
+            // Update counts
+            userCount.textContent = users.length;
+            activeCount.textContent = users.filter(user => user.status === 'active').length;
+            reportCount.textContent = reports.filter(report => report.status === 'pending').length;
+            warningCount.textContent = warnings.length;
+
+            // Apply filters and render tables
+            applyFilters();
+            renderReportsTable();
+        }
+
+        // Apply filters and search
+        function applyFilters() {
+            const users = getUsers();
+            const warnings = getWarnings();
+            const searchTerm = userSearchInput.value.toLowerCase();
+            const statusValue = statusFilter.value;
+
+            filteredUsers = users.filter(user => {
+                const matchesSearch =
+                    user.name.toLowerCase().includes(searchTerm) ||
+                    user.email.toLowerCase().includes(searchTerm) ||
+                    user.id.toString().includes(searchTerm);
+
+                let matchesTab = true;
+                if (activeTab === 'reported') {
+                    matchesTab = user.status === 'reported' || user.reports > 0;
+                } else if (activeTab === 'warned') {
+                    matchesTab = warnings.some(warning => warning.userId === user.id);
+                }
+
+                let matchesStatus = true;
+                if (statusValue !== 'all') {
+                    matchesStatus = user.status === statusValue;
+                }
+
+                return matchesSearch && matchesTab && matchesStatus;
+            });
+
+            totalCount.textContent = filteredUsers.length;
+
+            // Reset to first page when filters change
+            currentPage = 1;
+            currentPageNum.textContent = currentPage;
+            renderTable();
+        }
+
+        // Render users table with current filters and pagination
+        function renderTable() {
+            const start = (currentPage - 1) * itemsPerPage;
+            const end = start + itemsPerPage;
+            const paginatedUsers = filteredUsers.slice(start, end);
+
+            userTableBody.innerHTML = '';
+
+            if (paginatedUsers.length === 0) {
+                noResults.classList.remove('hidden');
+                showingCount.textContent = '0';
+            } else {
+                noResults.classList.add('hidden');
+                showingCount.textContent = paginatedUsers.length;
+
+                paginatedUsers.forEach(user => {
+                    const row = document.createElement('tr');
+                    row.className = 'table-row-hover';
+
+                    // Status badge class
+                    let statusClass, statusIcon;
+                    if (user.status === 'active') {
+                        statusClass = 'bg-green-100 text-green-800';
+                        statusIcon = 'fa-check';
+                    } else if (user.status === 'inactive') {
+                        statusClass = 'bg-gray-100 text-gray-800';
+                        statusIcon = 'fa-times';
+                    } else if (user.status === 'reported') {
+                        statusClass = 'bg-yellow-100 text-yellow-800';
+                        statusIcon = 'fa-flag';
+                    }
+
+                    // Reports badge class
+                    let reportsClass = '';
+                    if (user.reports > 0) {
+                        reportsClass = 'bg-red-100 text-red-800';
+                    } else {
+                        reportsClass = 'bg-gray-100 text-gray-800';
+                    }
+
+                    row.innerHTML = `
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${user.id}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${user.name}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${user.email}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            <span class="px-2 py-1 inline-flex items-center text-xs leading-5 font-semibold rounded-full ${statusClass}">
+                                <i class="fas ${statusIcon} mr-1"></i> ${user.status}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${user.lastActive}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            <span class="px-2 py-1 inline-flex items-center text-xs leading-5 font-semibold rounded-full ${reportsClass}">
+                                ${user.reports}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <div class="flex space-x-2">
+                                <button class="text-primary-600 hover:text-primary-800 transition-colors view-user" data-id="${user.id}" title="View User">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="text-yellow-600 hover:text-yellow-800 transition-colors warn-user" data-id="${user.id}" title="Warn User">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                </button>
+                                ${user.reports > 0 ? `
+                                    <button class="text-red-600 hover:text-red-800 transition-colors view-reports" data-id="${user.id}" title="View Reports">
+                                        <i class="fas fa-flag"></i>
+                                    </button>
+                                ` : ''}
+                            </div>
+                        </td>
+                    `;
+
+                    userTableBody.appendChild(row);
+                });
+
+                // Add event listeners to action buttons
+                document.querySelectorAll('.view-user').forEach(button => {
+                    button.addEventListener('click', function () {
+                        const userId = this.getAttribute('data-id');
+                        openViewUserModal(userId);
+                    });
+                });
+
+                document.querySelectorAll('.warn-user').forEach(button => {
+                    button.addEventListener('click', function () {
+                        const userId = this.getAttribute('data-id');
+                        openWarningModal(userId);
+                    });
+                });
+
+                document.querySelectorAll('.view-reports').forEach(button => {
+                    button.addEventListener('click', function () {
+                        const userId = this.getAttribute('data-id');
+                        showUserReports(userId);
+                    });
+                });
+            }
+
+            // Update pagination buttons
+            prevPage.disabled = currentPage === 1;
+            nextPage.disabled = end >= filteredUsers.length;
+        }
+
+        // Render reports table
+        function renderReportsTable() {
+            const reports = getReports().filter(report => report.status === 'pending');
+
+            reportTableBody.innerHTML = '';
+
+            if (reports.length === 0) {
+                noReports.classList.remove('hidden');
+            } else {
+                noReports.classList.add('hidden');
+
+                reports.forEach(report => {
+                    const row = document.createElement('tr');
+                    row.className = 'table-row-hover';
+
+                    // Content type badge class
+                    let contentClass, contentIcon;
+                    if (report.contentType === 'post') {
+                        contentClass = 'bg-blue-100 text-blue-800';
+                        contentIcon = 'fa-file-alt';
+                    } else if (report.contentType === 'comment') {
+                        contentClass = 'bg-purple-100 text-purple-800';
+                        contentIcon = 'fa-comment';
+                    } else if (report.contentType === 'profile') {
+                        contentClass = 'bg-green-100 text-green-800';
+                        contentIcon = 'fa-user';
+                    }
+
+                    // Status badge class
+                    let statusClass, statusIcon;
+                    if (report.status === 'pending') {
+                        statusClass = 'bg-yellow-100 text-yellow-800';
+                        statusIcon = 'fa-clock';
+                    } else if (report.status === 'resolved') {
+                        statusClass = 'bg-green-100 text-green-800';
+                        statusIcon = 'fa-check';
+                    } else if (report.status === 'ignored') {
+                        statusClass = 'bg-gray-100 text-gray-800';
+                        statusIcon = 'fa-times';
+                    }
+
+                    row.innerHTML = `
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${report.id}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${report.userName}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            <span class="px-2 py-1 inline-flex items-center text-xs leading-5 font-semibold rounded-full ${contentClass}">
+                                <i class="fas ${contentIcon} mr-1"></i> ${report.contentType}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${report.reason}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${report.date}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            <span class="px-2 py-1 inline-flex items-center text-xs leading-5 font-semibold rounded-full ${statusClass}">
+                                <i class="fas ${statusIcon} mr-1"></i> ${report.status}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <div class="flex space-x-2">
+                                <button class="text-primary-600 hover:text-primary-800 transition-colors view-report" data-id="${report.id}" title="View Report">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                        </td>
+                    `;
+
+                    reportTableBody.appendChild(row);
+                });
+
+                // Add event listeners to action buttons
+                document.querySelectorAll('.view-report').forEach(button => {
+                    button.addEventListener('click', function () {
+                        const reportId = this.getAttribute('data-id');
+                        openViewReportModal(reportId);
+                    });
+                });
+            }
+        }
+
+        // Open view user modal
+        function openViewUserModal(userId) {
+            const users = getUsers();
+            const user = users.find(u => u.id.toString() === userId);
+
+            if (user) {
+                viewUserId.textContent = user.id;
+                viewName.textContent = user.name;
+                viewEmail.textContent = user.email;
+                viewStatus.textContent = user.status;
+                viewReports.textContent = user.reports;
+                viewLastActive.textContent = user.lastActive;
+                viewCreated.textContent = user.created;
+
+                viewUserModal.classList.remove('hidden');
+
+                // Store user ID for warning button
+                warnUserBtn.setAttribute('data-id', user.id);
+            }
+        }
+
+        // Open view report modal
+        function openViewReportModal(reportId) {
+            const reports = getReports();
+            const report = reports.find(r => r.id.toString() === reportId);
+
+            if (report) {
+                viewReportId.textContent = report.id;
+                viewReportedUser.textContent = report.userName;
+                viewContentType.textContent = report.contentType;
+                viewReportedBy.textContent = report.reportedBy;
+                viewReason.textContent = report.reason;
+                viewReportDate.textContent = report.date;
+                viewContent.textContent = report.content;
+
+                viewReportModal.classList.remove('hidden');
+
+                // Store report ID for action buttons
+                ignoreReportBtn.setAttribute('data-id', report.id);
+                warnReportBtn.setAttribute('data-id', report.userId);
+                removeContentBtn.setAttribute('data-id', report.id);
+            }
+        }
+
+        // Open warning modal
+        function openWarningModal(userId) {
+            warningUserId.value = userId;
+            warningMessage.value = '';
+            warningReason.selectedIndex = 0;
+            warningModal.classList.remove('hidden');
+        }
+
+        // Show user reports
+        function showUserReports(userId) {
+            const reports = getReports();
+            const userReports = reports.filter(r => r.userId.toString() === userId);
+
+            if (userReports.length > 0) {
+                // Open the first report
+                openViewReportModal(userReports[0].id.toString());
+            } else {
+                showToast('No Reports', 'This user has no active reports.', 'info');
+            }
+        }
+
+        // Issue warning to user
+        function issueWarning(userId, reason, message) {
+            const users = getUsers();
+            const warnings = getWarnings();
+
+            const userIndex = users.findIndex(u => u.id.toString() === userId);
+            if (userIndex !== -1) {
+                // Add warning to warnings list
+                warnings.push({
+                    id: warnings.length + 1,
+                    userId: parseInt(userId),
+                    userName: users[userIndex].name,
+                    reason: reason,
+                    message: message,
+                    date: new Date().toISOString().split('T')[0]
+                });
+
+                saveWarnings(warnings);
+
+                showToast('Warning Issued', 'Warning has been sent to the user.', 'success');
+            }
+        }
+
+        // Resolve report
+        function resolveReport(reportId, resolution) {
+            const reports = getReports();
+            const reportIndex = reports.findIndex(r => r.id.toString() === reportId);
+
+            if (reportIndex !== -1) {
+                reports[reportIndex].status = resolution;
+                reports[reportIndex].resolvedDate = new Date().toISOString().split('T')[0];
+
+                saveReports(reports);
+
+                // Update user's report count if resolved
+                if (resolution === 'resolved') {
+                    const users = getUsers();
+                    const userIndex = users.findIndex(u => u.id === reports[reportIndex].userId);
+
+                    if (userIndex !== -1 && users[userIndex].reports > 0) {
+                        users[userIndex].reports--;
+                        if (users[userIndex].reports === 0 && users[userIndex].status === 'reported') {
+                            users[userIndex].status = 'active';
+                        }
+                        saveUsers(users);
+                    }
+                }
+
+                updateDashboard();
+                showToast('Report Updated', `Report has been marked as ${resolution}.`, 'success');
+            }
+        }
+
+        // Remove content
+        function removeContent(reportId) {
+            const reports = getReports();
+            const reportIndex = reports.findIndex(r => r.id.toString() === reportId);
+
+            if (reportIndex !== -1) {
+                // Mark report as resolved
+                reports[reportIndex].status = 'resolved';
+                reports[reportIndex].resolvedDate = new Date().toISOString().split('T')[0];
+                reports[reportIndex].resolution = 'content_removed';
+
+                saveReports(reports);
+
+                // Update user's report count
+                const users = getUsers();
+                const userIndex = users.findIndex(u => u.id === reports[reportIndex].userId);
+
+                if (userIndex !== -1 && users[userIndex].reports > 0) {
+                    users[userIndex].reports--;
+                    if (users[userIndex].reports === 0 && users[userIndex].status === 'reported') {
+                        users[userIndex].status = 'active';
+                    }
+                    saveUsers(users);
+                }
+
+                updateDashboard();
+                showToast('Content Removed', 'The reported content has been removed.', 'success');
+            }
+        }
+
+        // Show confirmation modal
+        function showConfirmationModal(title, message, type, onConfirm) {
+            modalTitle.textContent = title;
+            modalMessage.textContent = message;
+
+            // Set icon based on type
+            if (type === 'danger') {
+                modalIcon.className = 'inline-block p-3 rounded-full bg-red-100 text-red-500 mb-4';
+                modalIcon.innerHTML = '<i class="fas fa-exclamation-triangle text-2xl"></i>';
+                confirmAction.className = 'px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors';
+            } else if (type === 'warning') {
+                modalIcon.className = 'inline-block p-3 rounded-full bg-yellow-100 text-yellow-500 mb-4';
+                modalIcon.innerHTML = '<i class="fas fa-exclamation-circle text-2xl"></i>';
+                confirmAction.className = 'px-4 py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 transition-colors';
+            } else {
+                modalIcon.className = 'inline-block p-3 rounded-full bg-blue-100 text-blue-500 mb-4';
+                modalIcon.innerHTML = '<i class="fas fa-info-circle text-2xl"></i>';
+                confirmAction.className = 'px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors';
+            }
+
+            confirmationModal.classList.remove('hidden');
+
+            // Store the confirm action
+            confirmAction.onclick = () => {
+                onConfirm();
+                confirmationModal.classList.add('hidden');
+            };
+        }
+
+        // Show toast notification
+        function showToast(title, message, type) {
+            toastTitle.textContent = title;
+            toastMessage.textContent = message;
+
+            // Set icon and colors based on type
+            if (type === 'success') {
+                toastIcon.className = 'flex-shrink-0 w-10 h-10 rounded-full bg-green-100 flex items-center justify-center mr-4';
+                toastIconSymbol.className = 'fas fa-check text-green-500 text-lg';
+            } else if (type === 'error') {
+                toastIcon.className = 'flex-shrink-0 w-10 h-10 rounded-full bg-red-100 flex items-center justify-center mr-4';
+                toastIconSymbol.className = 'fas fa-times text-red-500 text-lg';
+            } else if (type === 'warning') {
+                toastIcon.className = 'flex-shrink-0 w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center mr-4';
+                toastIconSymbol.className = 'fas fa-exclamation text-yellow-500 text-lg';
+            } else {
+                toastIcon.className = 'flex-shrink-0 w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center mr-4';
+                toastIconSymbol.className = 'fas fa-info text-blue-500 text-lg';
+            }
+
+            // Show toast
+            toastNotification.classList.remove('hidden');
+            toastNotification.classList.add('animate-fade-in');
+
+            // Auto hide after 3 seconds
+            setTimeout(() => {
+                toastNotification.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => {
+                    toastNotification.classList.add('hidden');
+                    toastNotification.classList.remove('opacity-0', 'translate-y-2');
+                }, 300);
+            }, 3000);
+        }
+
+        // Set active tab
+        function setActiveTab(tab) {
+            // Remove active class from all tabs
+            [allUsersTab, reportedTab, warnedTab].forEach(tabEl => {
+                tabEl.classList.remove('text-primary-600', 'border-b-2', 'border-primary-500');
+                tabEl.classList.add('text-gray-500', 'hover:text-gray-700');
+            });
+
+            // Add active class to selected tab
+            let activeTabEl;
+            if (tab === 'all') {
+                activeTabEl = allUsersTab;
+            } else if (tab === 'reported') {
+                activeTabEl = reportedTab;
+            } else if (tab === 'warned') {
+                activeTabEl = warnedTab;
+            }
+
+            activeTabEl.classList.remove('text-gray-500', 'hover:text-gray-700');
+            activeTabEl.classList.add('text-primary-600', 'border-b-2', 'border-primary-500');
+
+            // Update active tab and reapply filters
+            activeTab = tab;
+            applyFilters();
+        }
+
+        // Event Listeners
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initialize localStorage
+            initializeLocalStorage();
+
+            // Check if logged in
+            checkAuth();
+
+            // Login form submission
+            loginButton.addEventListener('click', () => {
+                const id = modIdInput.value;
+                const password = modPasswordInput.value;
+
+                if (id === modCredentials.id && password === modCredentials.password) {
+                    localStorage.setItem('modLoggedIn', 'true');
+                    checkAuth();
+                    showToast('Login Successful', 'Welcome to the Moderator Dashboard', 'success');
+                } else {
+                    loginError.classList.remove('hidden');
+                    document.getElementById('errorMessage').textContent = 'Invalid credentials. Please try again.';
+                }
+            });
+
+            // Toggle password visibility
+            togglePassword.addEventListener('click', () => {
+                const type = modPasswordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                modPasswordInput.setAttribute('type', type);
+                togglePassword.innerHTML = type === 'password' ? '<i class="fas fa-eye"></i>' : '<i class="fas fa-eye-slash"></i>';
+            });
+
+            // Search and filter
+            userSearchInput.addEventListener('input', applyFilters);
+            statusFilter.addEventListener('change', applyFilters);
+
+            // Pagination
+            prevPage.addEventListener('click', () => {
+                if (currentPage > 1) {
+                    currentPage--;
+                    currentPageNum.textContent = currentPage;
+                    renderTable();
+                }
+            });
+
+            nextPage.addEventListener('click', () => {
+                const maxPage = Math.ceil(filteredUsers.length / itemsPerPage);
+                if (currentPage < maxPage) {
+                    currentPage++;
+                    currentPageNum.textContent = currentPage;
+                    renderTable();
+                }
+            });
+
+            // Page size select
+            pageSizeSelect.addEventListener('change', () => {
+                itemsPerPage = parseInt(pageSizeSelect.value);
+                currentPage = 1;
+                currentPageNum.textContent = currentPage;
+                renderTable();
+            });
+
+            // Tab navigation
+            allUsersTab.addEventListener('click', () => setActiveTab('all'));
+            reportedTab.addEventListener('click', () => setActiveTab('reported'));
+            warnedTab.addEventListener('click', () => setActiveTab('warned'));
+
+            // View user modal
+            closeViewModal.addEventListener('click', () => {
+                viewUserModal.classList.add('hidden');
+            });
+
+            closeViewBtn.addEventListener('click', () => {
+                viewUserModal.classList.add('hidden');
+            });
+
+            warnUserBtn.addEventListener('click', () => {
+                const userId = warnUserBtn.getAttribute('data-id');
+                viewUserModal.classList.add('hidden');
+                openWarningModal(userId);
+            });
+
+            // View report modal
+            closeReportModal.addEventListener('click', () => {
+                viewReportModal.classList.add('hidden');
+            });
+
+            ignoreReportBtn.addEventListener('click', () => {
+                const reportId = ignoreReportBtn.getAttribute('data-id');
+                showConfirmationModal('Ignore Report', 'Are you sure you want to ignore this report?', 'warning', () => {
+                    resolveReport(reportId, 'ignored');
+                    viewReportModal.classList.add('hidden');
+                });
+            });
+
+            warnReportBtn.addEventListener('click', () => {
+                const userId = warnReportBtn.getAttribute('data-id');
+                viewReportModal.classList.add('hidden');
+                openWarningModal(userId);
+            });
+
+            removeContentBtn.addEventListener('click', () => {
+                const reportId = removeContentBtn.getAttribute('data-id');
+                showConfirmationModal('Remove Content', 'Are you sure you want to remove this content? This action cannot be undone.', 'danger', () => {
+                    removeContent(reportId);
+                    viewReportModal.classList.add('hidden');
+                });
+            });
+
+            // Warning modal
+            warningForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+
+                const userId = warningUserId.value;
+                const reason = warningReason.value;
+                const message = warningMessage.value;
+
+                if (!message.trim()) {
+                    showToast('Error', 'Please provide a warning message.', 'error');
+                    return;
+                }
+
+                issueWarning(userId, reason, message);
+                warningModal.classList.add('hidden');
+            });
+
+            cancelWarning.addEventListener('click', () => {
+                warningModal.classList.add('hidden');
+            });
+
+            // Modal cancel button
+            cancelAction.addEventListener('click', () => {
+                confirmationModal.classList.add('hidden');
+            });
+
+            // Close toast
+            closeToast.addEventListener('click', () => {
+                toastNotification.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => {
+                    toastNotification.classList.add('hidden');
+                    toastNotification.classList.remove('opacity-0', 'translate-y-2');
+                }, 300);
+            });
+
+            // Profile dropdown
+            profileDropdownButton.addEventListener('click', () => {
+                profileDropdown.classList.toggle('hidden');
+            });
+
+            // Close dropdown when clicking outside
+            document.addEventListener('click', (event) => {
+                if (!profileDropdownButton.contains(event.target) && !profileDropdown.contains(event.target)) {
+                    profileDropdown.classList.add('hidden');
+                }
+            });
+
+            // Logout
+            logoutButton.addEventListener('click', () => {
+                localStorage.removeItem('modLoggedIn');
+                checkAuth();
+            });
+
+            // Mobile menu
+            menuBtn.addEventListener('click', () => {
+                mobileMenu.classList.remove('hidden');
+            });
+
+            closeMenu.addEventListener('click', () => {
+                mobileMenu.classList.add('hidden');
+            });
+
+            mobileLogout.addEventListener('click', () => {
+                localStorage.removeItem('modLoggedIn');
+                checkAuth();
+                mobileMenu.classList.add('hidden');
+            });
+
+            // Comment: In a real application, we would fetch data from an API
+            // Example API fetch code (commented out as requested):
+            /*
+            // Fetch users
+            async function fetchUsers() {
+                try {
+                    const response = await fetch('/api/users');
+                    if (!response.ok) {
+                        throw new Error('Failed to fetch users');
+                    }
+                    const data = await response.json();
+                    saveUsers(data);
+                    updateDashboard();
+                } catch (error) {
+                    console.error('Error fetching users:', error);
+                    showToast('Error', 'Failed to load users. Please try again.', 'error');
+                }
+            }
+            
+            // Fetch reports
+            async function fetchReports() {
+                try {
+                    const response = await fetch('/api/reports');
+                    if (!response.ok) {
+                        throw new Error('Failed to fetch reports');
+                    }
+                    const data = await response.json();
+                    saveReports(data);
+                    renderReportsTable();
+                } catch (error) {
+                    console.error('Error fetching reports:', error);
+                    showToast('Error', 'Failed to load reports. Please try again.', 'error');
+                }
+            }
+            
+            // Submit warning to API
+            async function submitWarning(userId, reason, message) {
+                try {
+                    const response = await fetch('/api/warnings', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ userId, reason, message })
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error('Failed to submit warning');
+                    }
+                    
+                    const data = await response.json();
+                    return data;
+                } catch (error) {
+                    console.error('Error submitting warning:', error);
+                    throw error;
+                }
+            }
+            
+            // Update report status
+            async function updateReportStatus(reportId, status) {
+                try {
+                    const response = await fetch(`/api/reports/${reportId}`, {
+                        method: 'PATCH',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ status })
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error('Failed to update report');
+                    }
+                    
+                    const data = await response.json();
+                    return data;
+                } catch (error) {
+                    console.error('Error updating report:', error);
+                    throw error;
+                }
+            }
+            */
+        });
+    </script>
+</body>
+
+</html>

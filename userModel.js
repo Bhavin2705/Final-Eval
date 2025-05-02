@@ -1,19 +1,25 @@
 const mongoose = require('mongoose');
-mongoose.connect('mongodb://127.0.0.1:27017/socialweb');
 
 const userSchema = new mongoose.Schema({
-    name:{
-        type:String,
-        required : true,
+    name: { type: String, required: true },
+    email: { type: String, required: true, unique: true },
+    password: {
+        type: String,
+        required: function () {
+            return this.role !== 'guest'; // Password required unless role is guest
+        }
     },
-    email:{
-        type:String,
-        required : true,
+    role: {
+        type: String,
+        enum: ['owner', 'admin', 'moderator', 'user', 'guest'],
+        default: 'user'
     },
-    password:{
-        type:String,
-        required:true
-    }
-})
+    status: {
+        type: String,
+        enum: ['active', 'inactive', 'banned'],
+        default: 'active'
+    },
+    lastLogin: { type: String }
+});
 
-module.exports = mongoose.model('user',userSchema)
+module.exports = mongoose.model('User', userSchema);

@@ -1,17 +1,3 @@
-// User data structure
-const userData = {
-    name: ' ',
-    handle: ' ',
-    topics: [
-        { id: 1, name: 'Technology', icon: 'fa-laptop-code', posts: 125 },
-        { id: 2, name: 'News', icon: 'fa-newspaper', posts: 89 },
-        { id: 3, name: 'Fitness', icon: 'fa-dumbbell', posts: 45 },
-        { id: 4, name: 'Sports', icon: 'fa-trophy', posts: 67 },
-        { id: 5, name: 'Movies', icon: 'fa-film', posts: 93 }
-    ]
-};
-
-// Subreddit mappings
 const topicToSubreddit = {
     technology: ['technology', 'gadgets', 'technews'],
     news: ['worldnews', 'news', 'uknews'],
@@ -66,54 +52,79 @@ function debounce(func, wait) {
 /**
  * Initialize the sidebar with user data and topic list
  */
-function initializeSidebar() {
-    let loggedInUser = JSON.parse(localStorage.getItem('loggedInUser'));
-
-    // Check if loggedInUser is null or undefined
-    if (!loggedInUser) {
-        loggedInUser = { name: 'Guest' }; // Provide a default name
+async function initializeSidebar() {
+    let user = { name: 'Guest', email: 'guest' }; // Default guest user
+    try {
+        const response = await fetch('/api/me', {
+            credentials: 'include' // Include cookies for session
+        });
+        if (response.ok) {
+            const data = await response.json();
+            if (data.user) {
+                user = data.user; // { name, email, role }
+            }
+        } else {
+            console.warn('Failed to fetch user data:', response.status);
+        }
+    } catch (error) {
+        console.error('Error fetching user data:', error);
     }
 
-    if (loggedInUser.name) {
-        document.getElementById('userName').textContent = loggedInUser.name;
-        document.getElementById('userHandle').textContent = `@${loggedInUser.name.toLowerCase().replace(/\s+/g, '_')}`;
+    // Update user name and handle
+    const userNameEl = document.getElementById('userName');
+    const userHandleEl = document.getElementById('userHandle');
+    if (userNameEl && userHandleEl) {
+        userNameEl.textContent = user.name;
+        userHandleEl.textContent = `@${user.email.split('@')[0].toLowerCase().replace(/\s+/g, '_')}`;
     } else {
-        console.error('loggedInUser.name is undefined or null');
+        console.error('User name or handle element not found');
     }
 
-    const msgDot = document.getElementById('msgCount');
-    if (userData.messages > 0) {
-        msgDot.classList.remove('hidden');
-    }
-
-    document.getElementById('msgNav').addEventListener('click', () => msgDot.classList.add('hidden'));
+    // Topic list
+    const topics = [
+        { id: 1, name: 'Technology', icon: 'fa-laptop-code', posts: 125 },
+        { id: 2, name: 'News', icon: 'fa-newspaper', posts: 89 },
+        { id: 3, name: 'Fitness', icon: 'fa-dumbbell', posts: 45 },
+        { id: 4, name: 'Sports', icon: 'fa-trophy', posts: 67 },
+        { id: 5, name: 'Movies', icon: 'fa-film', posts: 93 }
+    ];
 
     const topicsList = document.getElementById('topics-list');
-    userData.topics.forEach(topic => {
-        const topicEl = document.createElement('div');
-        topicEl.className = 'topic-item flex items-center space-x-3 cursor-pointer';
-        topicEl.innerHTML = `
-            <i class="fa ${topic.icon}"></i>
-            <span>${topic.name}</span>
-            <span class="ml-auto text-xs text-gray-500">(${topic.posts} Posts)</span>
-        `;
+    if (topicsList) {
+        topics.forEach(topic => {
+            const topicEl = document.createElement('div');
+            topicEl.className = 'topic-item flex items-center space-x-3 cursor-pointer p-2 hover:bg-gray-100 rounded-md';
+            topicEl.innerHTML = `
+                <i class="fa ${topic.icon} text-gray-600"></i>
+                <span class="text-gray-800">${topic.name}</span>
+                <span class="ml-auto text-xs text-gray-500">(${topic.posts} Posts)</span>
+            `;
 
-        topicEl.addEventListener('click', () => {
-            const selectedTopic = document.querySelector('.topic-item.selected');
-            if (selectedTopic) selectedTopic.classList.remove('selected');
-            topicEl.classList.add('selected');
-            currentTopic = topic.name.toLowerCase();
-            loadPostsByTopic(currentTopic);
+            topicEl.addEventListener('click', () => {
+                const selectedTopic = document.querySelector('.topic-item.selected');
+                if (selectedTopic) selectedTopic.classList.remove('selected');
+                topicEl.classList.add('selected');
+                currentTopic = topic.name.toLowerCase();
+                loadPostsByTopic(currentTopic);
+            });
+
+            topicsList.appendChild(topicEl);
         });
+    } else {
+        console.error('Topics list element not found');
+    }
 
-        topicsList.appendChild(topicEl);
-    });
-
-    document.getElementById('topics-toggle').addEventListener('click', () => {
-        document.getElementById('topics-list').classList.toggle('expanded');
-        const icon = document.querySelector('#topics-toggle i');
-        icon.classList.toggle('rotate-180');
-    });
+    // Topics toggle
+    const topicsToggle = document.getElementById('topics-toggle');
+    if (topicsToggle) {
+        topicsToggle.addEventListener('click', () => {
+            topicsList.classList.toggle('expanded');
+            const icon = topicsToggle.querySelector('i');
+            icon.classList.toggle('rotate-180');
+        });
+    } else {
+        console.error('Topics toggle element not found');
+    }
 }
 
 // Reddit API Functions
@@ -125,11 +136,11 @@ function initializeSidebar() {
  */
 async function fetchRedditPosts(subreddit) {
     try {
-        // Add a small delay to prevent rate limiting issues
-        await new Promise(resolve => setTimeout(resolve, 300));
-
-        const response = await fetch(`/reddit-posts?subreddit=${subreddit}&after=${after}`);
-        if (!response.ok) throw new Error(`Failed to fetch data from subreddit: ${subreddit}`);
+        await new Promise(resolve => setTimeout(resolve, 300)); // Prevent rate limiting
+        const response = await fetch(`/reddit-posts?subreddit=${subreddit}&after=${after}`, {
+            credentials: 'include'
+        });
+        if (!response.ok) throw new Error(`Failed to fetch data from subreddit: ${subreddit} (${response.status})`);
 
         const data = await response.json();
         if (!data.data || !data.data.children) return [];
@@ -141,8 +152,7 @@ async function fetchRedditPosts(subreddit) {
                 if (!post.data) return null;
                 if (post.data.is_self || post.data.thumbnail === 'self') return null;
 
-                // Only return posts with a valid image URL
-                const imageUrl = post.data.preview?.images?.[0]?.source?.url?.replace(/&amp;/g, '&');
+                const imageUrl = post.data.preview?.images?.[0]?.source?.url?.replace(/&/g, '&');
                 if (!imageUrl || !imageUrl.startsWith('http')) return null;
 
                 return {
@@ -153,18 +163,32 @@ async function fetchRedditPosts(subreddit) {
                     author: post.data.author,
                     subreddit: post.data.subreddit,
                     permalink: `https://reddit.com${post.data.permalink}`,
-                    created: post.data.created_utc * 1000, // Convert to milliseconds
+                    created: post.data.created_utc * 1000
                 };
             })
             .filter(post => post !== null);
     } catch (error) {
-        console.error('Error fetching Reddit posts:', error);
+        console.error(`Error fetching Reddit posts from ${subreddit}:`, error);
         return [];
     }
 }
-function isUserLoggedIn() {
-    const loggedInUser = JSON.parse(localStorage.getItem('loggedInUser'));
-    return loggedInUser && loggedInUser.name !== 'Guest';
+
+/**
+ * Check if a user is logged in
+ * @returns {boolean} - True if logged in, false otherwise
+ */
+async function isUserLoggedIn() {
+    try {
+        const response = await fetch('/api/me', { credentials: 'include' });
+        if (response.ok) {
+            const data = await response.json();
+            return data.user && data.user.name !== 'Guest';
+        }
+        return false;
+    } catch (error) {
+        console.error('Error checking login status:', error);
+        return false;
+    }
 }
 
 // Post Creation and Interaction
@@ -178,7 +202,6 @@ function createPost(post) {
     const postElement = document.createElement('div');
     postElement.className = 'post mb-6 rounded-lg overflow-hidden shadow-lg bg-white hover:shadow-xl transition-shadow duration-300';
 
-    // Load comments from local storage
     const comments = loadCommentsFromLocalStorage(post.id);
 
     postElement.innerHTML = `
@@ -223,7 +246,6 @@ function createPost(post) {
         </div>
     `;
 
-    // Add event listeners for post interaction
     addPostEventListeners(postElement, post, comments);
 
     return postElement;
@@ -235,7 +257,7 @@ function createPost(post) {
  * @param {Object} post - Post data
  * @param {Array} comments - Array of comments
  */
-function addPostEventListeners(postElement, post, comments) {
+async function addPostEventListeners(postElement, post, comments) {
     const postImage = postElement.querySelector('img');
     postImage.addEventListener('click', () => {
         window.open(post.permalink, '_blank');
@@ -250,9 +272,9 @@ function addPostEventListeners(postElement, post, comments) {
     const commentsContainer = postElement.querySelector('.comments-container');
     const commentCount = postElement.querySelector('.comment-count');
 
-    likeBtn.addEventListener('click', (e) => {
+    likeBtn.addEventListener('click', async (e) => {
         e.stopPropagation();
-        if (!isUserLoggedIn()) {
+        if (!(await isUserLoggedIn())) {
             alert('Kindly log in before liking a post.');
             return;
         }
@@ -260,9 +282,9 @@ function addPostEventListeners(postElement, post, comments) {
         likeBtn.querySelector('i').classList.toggle('far');
     });
 
-    commentBtn.addEventListener('click', (e) => {
+    commentBtn.addEventListener('click', async (e) => {
         e.stopPropagation();
-        if (!isUserLoggedIn()) {
+        if (!(await isUserLoggedIn())) {
             alert('Kindly log in before commenting.');
             return;
         }
@@ -285,9 +307,9 @@ function addPostEventListeners(postElement, post, comments) {
         }
     });
 
-    bookmarkBtn.addEventListener('click', (e) => {
+    bookmarkBtn.addEventListener('click', async (e) => {
         e.stopPropagation();
-        if (!isUserLoggedIn()) {
+        if (!(await isUserLoggedIn())) {
             alert('Kindly log in before bookmarking a post.');
             return;
         }
@@ -295,26 +317,31 @@ function addPostEventListeners(postElement, post, comments) {
         bookmarkBtn.querySelector('i').classList.toggle('far');
     });
 
-    postCommentBtn.addEventListener('click', (e) => {
+    postCommentBtn.addEventListener('click', async (e) => {
         e.stopPropagation();
-        if (!isUserLoggedIn()) {
+        if (!(await isUserLoggedIn())) {
             alert('Kindly log in before commenting.');
             return;
         }
         const commentText = postElement.querySelector('textarea').value;
         if (commentText.trim() === '') return;
 
-        let loggedInUser = JSON.parse(localStorage.getItem('loggedInUser'));
-        if (!loggedInUser) {
-            loggedInUser = { name: 'Guest' }; // Provide a default name
+        let user = { name: 'Guest' };
+        try {
+            const response = await fetch('/api/me', { credentials: 'include' });
+            if (response.ok) {
+                const data = await response.json();
+                if (data.user) user = data.user;
+            }
+        } catch (error) {
+            console.error('Error fetching user for comment:', error);
         }
 
         const timestamp = Date.now();
-
         const comment = {
-            author: loggedInUser.name,
+            author: user.name,
             text: commentText,
-            timestamp: timestamp,
+            timestamp: timestamp
         };
 
         comments.push(comment);
@@ -336,6 +363,7 @@ function addPostEventListeners(postElement, post, comments) {
         postElement.querySelector('textarea').value = '';
     });
 }
+
 // Local Storage Functions
 
 /**
@@ -374,7 +402,7 @@ async function loadPostsByTopic(topic, isInfiniteScroll = false) {
     if (isLoading) return;
     isLoading = true;
 
-    loadingIndicator?.classList.remove('hidden');
+    if (loadingIndicator) loadingIndicator.classList.remove('hidden');
 
     if (!isInfiniteScroll) {
         postFeed.innerHTML = '';
@@ -429,22 +457,21 @@ async function loadPostsByTopic(topic, isInfiniteScroll = false) {
         }
     } finally {
         isLoading = false;
-        loadingIndicator?.classList.add('hidden');
+        if (loadingIndicator) loadingIndicator.classList.add('hidden');
     }
 }
 
 // Initialize everything when the DOM is loaded
-document.addEventListener('DOMContentLoaded', () => {
-    initializeSidebar();
+document.addEventListener('DOMContentLoaded', async () => {
+    await initializeSidebar();
 
     const firstTopic = document.querySelector('.topic-item');
     if (firstTopic) {
         firstTopic.classList.add('selected');
-        currentTopic = userData.topics[0].name.toLowerCase();
+        currentTopic = 'technology';
         loadPostsByTopic(currentTopic);
     }
 
-    // Use debounced scroll handler to prevent too many API calls
     window.addEventListener('scroll', debounce(() => {
         if (isLoading) return;
 

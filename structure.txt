@@ -1,0 +1,63 @@
+Folder PATH listing for volume OS
+Volume serial number is 900D-7C20
+C:.
+|   .env
+|   .gitignore
+|   friendRequests.json
+|   index.js
+|   messages.json
+|   package-lock.json
+|   package.json
+|   posts.json
+|   structure.txt
+|   userModel.js
+|   users.json
+|   
++---.vscode
+|       settings.json
+|       
++---public
+|   |   Bookmarks.html
+|   |   explore.html
+|   |   ExplorePage.html
+|   |   home.html
+|   |   homePage.html
+|   |   homePages.html
+|   |   homes.html
+|   |   login.html
+|   |   messages.html
+|   |   my-posts.html
+|   |   owner.css
+|   |   owner.html
+|   |   ownerlogin.html
+|   |   Posts.html
+|   |   profile.html
+|   |   register.html
+|   |   responsive.css
+|   |   script.js
+|   |   
+|   \---components
+|       +---css
+|       |       Bookmark.css
+|       |       explore.css
+|       |       explore1.css
+|       |       messages.css
+|       |       navbar.css
+|       |       Yourpost.css
+|       |       
+|       \---js
+|               Bookmarks.js
+|               explorePage.js
+|               leftsection.js
+|               messages.js
+|               middle-section.js
+|               navbar.js
+|               owner.js
+|               right-section.js
+|               scripts.js
+|               Yourposts.js
+|               
+\---views
+        admin.ejs
+        owner.ejs
+        
