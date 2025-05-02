@@ -1,7 +1,6 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
-const axios = require('axios');
 const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
 const session = require('express-session');
@@ -149,16 +148,259 @@ const validateObjectId = (id, res) => {
     return true;
 };
 
-// Public Static Routes
+// API Routes
+// Authentication Routes
+app.get('/api/v1/auth/check', checkAuth, async (req, res, next) => {
+    try {
+        res.json({
+            isAuthenticated: true,
+            user: {
+                id: req.user._id,
+                name: req.user.name,
+                email: req.user.email,
+                role: req.user.role
+            }
+        });
+    } catch (err) {
+        next(err);
+    }
+});
+
+app.post('/api/v1/auth/login', async (req, res, next) => {
+    try {
+        const { email, password } = req.body;
+        if (!email || !password) {
+            return res.status(400).json({ message: 'Missing email or password' });
+        }
+        const moderator = await userModel.findOne({ email, role: 'moderator' });
+        if (!moderator) {
+            return res.status(401).json({ message: 'Invalid credentials' });
+        }
+        const isMatch = await bcrypt.compare(password, moderator.password);
+        if (!isMatch) {
+            return res.status(401).json({ message: 'Invalid credentials' });
+        }
+        req.session.userId = moderator._id;
+        await userModel.updateOne({ _id: moderator._id }, { lastLogin: new Date().toISOString() });
+        res.json({
+            message: 'Moderator login successful',
+            token: req.sessionID,
+            user: {
+                id: moderator._id,
+                name: moderator.name,
+                email: moderator.email,
+                role: moderator.role
+            }
+        });
+    } catch (err) {
+        next(err);
+    }
+});
+
+app.post('/api/v1/auth/logout', checkAuth, (req, res, next) => {
+    req.session.destroy(err => {
+        if (err) {
+            return next(err);
+        }
+        res.json({ message: 'Logged out' });
+    });
+});
+
+// User Routes
+app.get('/api/v1/users', checkModAuth, async (req, res, next) => {
+    try {
+        const users = await userModel.find().select('_id name email status lastLogin createdAt');
+        const usersWithReports = await Promise.all(users.map(async (user) => {
+            const reports = await reportModel.find({ userId: user._id, status: 'pending' });
+            return {
+                id: user._id,
+                name: user.name,
+                email: user.email || (user.role === 'guest' ? 'N/A' : user.email),
+                status: user.status || 'active',
+                lastActive: user.lastLogin || 'Unknown',
+                reports: reports.length,
+                created: user.createdAt || new Date().toISOString()
+            };
+        }));
+        res.json(usersWithReports);
+    } catch (err) {
+        next(err);
+    }
+});
+
+app.get('/api/v1/users/:id', checkModAuth, async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        if (!validateObjectId(id, res)) return;
+        const user = await userModel.findById(id).select('_id name email status lastLogin createdAt');
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        const reports = await reportModel.find({ userId: id, status: 'pending' });
+        res.json({
+            id: user._id,
+            name: user.name,
+            email: user.email || (user.role === 'guest' ? 'N/A' : user.email),
+            status: user.status || 'active',
+            lastActive: user.lastLogin || 'Unknown',
+            reports: reports.length,
+            created: user.createdAt || new Date().toISOString()
+        });
+    } catch (err) {
+        next(err);
+    }
+});
+
+// Report Routes
+app.get('/api/v1/reports', checkModAuth, async (req, res, next) => {
+    try {
+        const { userId, status } = req.query;
+        const query = {};
+        if (userId && validateObjectId(userId, res)) {
+            query.userId = userId;
+        }
+        if (status) {
+            query.status = status;
+        }
+        const reports = await reportModel.find(query).populate('userId reportedBy', 'name email');
+        const formattedReports = reports.map(report => ({
+            id: report._id,
+            userId: report.userId._id,
+            userName: report.userId.name,
+            contentType: report.contentType || 'post',
+            content: report.content || '',
+            reason: report.reason || 'Unknown',
+            reportedBy: report.reportedBy ? report.reportedBy.name : 'Anonymous',
+            status: report.status || 'pending',
+            date: report.createdAt.toISOString().split('T')[0]
+        }));
+        res.json(formattedReports);
+    } catch (err) {
+        next(err);
+    }
+});
+
+app.get('/api/v1/reports/:id', checkModAuth, async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        if (!validateObjectId(id, res)) return;
+        const report = await reportModel.findById(id).populate('userId reportedBy', 'name email');
+        if (!report) {
+            return res.status(404).json({ message: 'Report not found' });
+        }
+        res.json({
+            id: report._id,
+            userId: report.userId._id,
+            userName: report.userId.name,
+            contentType: report.contentType || 'post',
+            content: report.content || '',
+            reason: report.reason || 'Unknown',
+            reportedBy: report.reportedBy ? report.reportedBy.name : 'Anonymous',
+            status: report.status || 'pending',
+            date: report.createdAt.toISOString().split('T')[0]
+        });
+    } catch (err) {
+        next(err);
+    }
+});
+
+app.patch('/api/v1/reports/:id', checkModAuth, async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const { status, resolvedDate } = req.body;
+        if (!validateObjectId(id, res)) return;
+        if (!status || !['pending', 'resolved', 'ignored'].includes(status)) {
+            return res.status(400).json({ message: 'Valid status is required' });
+        }
+        const report = await reportModel.findByIdAndUpdate(
+            id,
+            { status, resolvedDate: resolvedDate || new Date().toISOString() },
+            { new: true }
+        );
+        if (!report) {
+            return res.status(404).json({ message: 'Report not found' });
+        }
+        res.json({ message: 'Report updated', report });
+    } catch (err) {
+        next(err);
+    }
+});
+
+app.post('/api/v1/reports/:id/remove', checkModAuth, async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const { status, resolvedDate, resolution } = req.body;
+        if (!validateObjectId(id, res)) return;
+        const report = await reportModel.findById(id);
+        if (!report) {
+            return res.status(404).json({ message: 'Report not found' });
+        }
+        if (report.contentType === 'post') {
+            await postModel.findOneAndDelete({ content: report.content });
+        }
+        await reportModel.findByIdAndUpdate(
+            id,
+            { status: status || 'resolved', resolvedDate: resolvedDate || new Date().toISOString(), resolution: resolution || 'content_removed' },
+            { new: true }
+        );
+        res.json({ message: 'Content removed and report updated' });
+    } catch (err) {
+        next(err);
+    }
+});
+
+// Warning Routes
+app.post('/api/v1/warnings', checkModAuth, async (req, res, next) => {
+    try {
+        const { userId, reason, message, date } = req.body;
+        if (!userId || !reason || !message || !validateObjectId(userId, res)) {
+            return res.status(400).json({ message: 'Missing required fields or invalid user ID' });
+        }
+        const user = await userModel.findById(userId);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        const warning = await warningModel.create({
+            userId,
+            reason,
+            message,
+            date: date || new Date().toISOString()
+        });
+        res.json({ message: 'Warning issued', warning });
+    } catch (err) {
+        next(err);
+    }
+});
+
+app.get('/api/v1/warnings', checkModAuth, async (req, res, next) => {
+    try {
+        const { userId } = req.query;
+        const query = userId && validateObjectId(userId, res) ? { userId } : {};
+        const warnings = await warningModel.find(query).populate('userId', 'name email');
+        const formattedWarnings = warnings.map(warning => ({
+            id: warning._id,
+            userId: warning.userId._id,
+            userName: warning.userId.name,
+            reason: warning.reason,
+            message: warning.message,
+            date: warning.date
+        }));
+        res.json(formattedWarnings);
+    } catch (err) {
+        next(err);
+    }
+});
+
+// Existing Routes (Updated for Compatibility)
 app.get(['/', '/register', '/login', '/owner', '/moderator'], async (req, res, next) => {
     try {
         const page = req.path === '/' ? 'homePage' : req.path.slice(1);
         if (req.path === '/') {
-            let user = null;
+            let user = { name: 'Guest', email: 'guest', role: 'guest' };
             if (req.session.userId) {
                 user = await userModel.findById(req.session.userId).select('name email role');
             }
-            res.render('homePage', { user: user || { name: 'Guest', email: 'guest', role: 'guest' } });
+            res.render('homePage', { user });
         } else {
             res.render(`${page}.ejs`);
         }
@@ -167,7 +409,6 @@ app.get(['/', '/register', '/login', '/owner', '/moderator'], async (req, res, n
     }
 });
 
-// Protected Static Routes
 app.get('/messages', checkAuth, (req, res) => {
     res.render('messages.ejs');
 });
@@ -189,7 +430,7 @@ app.get('/bookmarks', checkAuth, (req, res) => {
     res.render('bookmarks.ejs');
 });
 
-app.get('/admin', checkOwnerAuth, (req, res) => {
+app.get('/admin', (req, res) => {
     res.render('admin.ejs');
 });
 
@@ -197,7 +438,6 @@ app.get('/moderator-dashboard', checkModAuth, (req, res) => {
     res.render('moderator-dashboard.ejs');
 });
 
-// Current User Route
 app.get('/api/me', async (req, res, next) => {
     try {
         if (req.session.userId) {
@@ -212,7 +452,6 @@ app.get('/api/me', async (req, res, next) => {
     }
 });
 
-// Login Route (Regular Users)
 app.post('/login', async (req, res, next) => {
     try {
         const { email, password } = req.body;
@@ -241,7 +480,6 @@ app.post('/login', async (req, res, next) => {
     }
 });
 
-// Owner Login Route
 app.post('/api/owner/login', async (req, res, next) => {
     try {
         const { email, password } = req.body;
@@ -267,7 +505,6 @@ app.post('/api/owner/login', async (req, res, next) => {
     }
 });
 
-// Moderator Login Route
 app.post('/api/moderator/login', async (req, res, next) => {
     try {
         const { email, password } = req.body;
@@ -293,7 +530,6 @@ app.post('/api/moderator/login', async (req, res, next) => {
     }
 });
 
-// Logout Route
 app.post('/logout', (req, res, next) => {
     req.session.destroy(err => {
         if (err) {
@@ -303,7 +539,6 @@ app.post('/logout', (req, res, next) => {
     });
 });
 
-// User/Auth Routes
 app.post('/register', async (req, res, next) => {
     try {
         const { name, email, password } = req.body;
@@ -322,8 +557,10 @@ app.post('/register', async (req, res, next) => {
             password: hashedPassword,
             role: 'user',
             status: 'active',
-            lastLogin: new Date().toISOString()
+            lastLogin: new Date().toISOString(),
+            createdAt: new Date().toISOString()
         });
+        req.session.userId = newUser._id;
         res.status(201).json({
             message: 'User registered successfully',
             user: { id: newUser._id, name: newUser.name, email: newUser.email, role: newUser.role }
@@ -333,7 +570,6 @@ app.post('/register', async (req, res, next) => {
     }
 });
 
-// Owner Routes
 app.get('/api/owner/me', checkOwnerAuth, async (req, res, next) => {
     try {
         const user = await userModel.findById(req.session.userId);
@@ -348,7 +584,6 @@ app.get('/api/owner/me', checkOwnerAuth, async (req, res, next) => {
     }
 });
 
-// User Management Routes
 app.post('/api/users', checkOwnerAuth, async (req, res, next) => {
     try {
         const { name, email, role, password } = req.body;
@@ -370,7 +605,8 @@ app.post('/api/users', checkOwnerAuth, async (req, res, next) => {
             password: hashedPassword,
             role,
             status: 'active',
-            lastLogin: new Date().toISOString()
+            lastLogin: new Date().toISOString(),
+            createdAt: new Date().toISOString()
         });
         res.status(201).json({
             user: {
@@ -393,10 +629,10 @@ app.get('/api/users', checkOwnerAuth, async (req, res, next) => {
         res.json({
             users: users.map(user => ({
                 id: user._id,
-                name: user.name,
-                email: user.email,
+                name: user.name || (user.role === 'guest' ? 'Guest' : user.name),
+                email: user.email || (user.role === 'guest' ? 'N/A' : user.email),
                 role: user.role,
-                status: user.status,
+                status: user.status || 'active',
                 lastLogin: user.lastLogin
             }))
         });
@@ -415,17 +651,30 @@ app.patch('/api/users', checkOwnerAuth, async (req, res, next) => {
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
-        const updateData = {};
-        if (name) updateData.name = name;
-        if (email) {
-            const existingUser = await userModel.findOne({ email, _id: { $ne: id } });
-            if (existingUser) {
-                return res.status(400).json({ message: 'Email already in use' });
-            }
-            updateData.email = email;
+        if (id === req.session.userId && user.role === 'owner' && role && role !== 'owner') {
+            console.log(`Owner ${req.session.userId} attempted to change own role to ${role}`);
+            return res.status(403).json({ message: 'You cannot change your own owner role' });
         }
-        if (role && ['owner', 'admin', 'moderator', 'user'].includes(role)) {
+        const updateData = {};
+        if (name !== undefined) updateData.name = name || (role === 'guest' ? 'Guest' : name);
+        if (email !== undefined) {
+            if (email && email !== 'N/A') {
+                const existingUser = await userModel.findOne({ email, _id: { $ne: id } });
+                if (existingUser) {
+                    return res.status(400).json({ message: 'Email already in use' });
+                }
+                updateData.email = email;
+            } else {
+                updateData.email = role === 'guest' ? 'N/A' : null;
+            }
+        }
+        if (role && ['owner', 'admin', 'moderator', 'user', 'guest'].includes(role)) {
+            console.log(`Updating user ${id} to role ${role}`);
             updateData.role = role;
+            if (role === 'guest') {
+                updateData.email = 'N/A';
+                updateData.name = 'Guest';
+            }
         }
         if (status && ['active', 'inactive', 'banned'].includes(status)) {
             updateData.status = status;
@@ -437,14 +686,15 @@ app.patch('/api/users', checkOwnerAuth, async (req, res, next) => {
         res.json({
             user: {
                 id: updatedUser._id,
-                name: updatedUser.name,
-                email: updatedUser.email,
+                name: updatedUser.name || (updatedUser.role === 'guest' ? 'Guest' : updatedUser.name),
+                email: updatedUser.email || (updatedUser.role === 'guest' ? 'N/A' : updatedUser.email),
                 role: updatedUser.role,
-                status: updatedUser.status,
+                status: updatedUser.status || 'active',
                 lastLogin: updatedUser.lastLogin
             }
         });
     } catch (err) {
+        console.error(`Error updating user ${req.body.id}:`, err.message);
         next(err);
     }
 });
@@ -465,15 +715,19 @@ app.patch('/api/users/demote', checkOwnerAuth, async (req, res, next) => {
         if (user.role !== fromRole) {
             return res.status(400).json({ message: `User is not a ${fromRole}` });
         }
+        if (id === req.session.userId && user.role === 'owner') {
+            console.log(`Owner ${req.session.userId} attempted to demote themselves`);
+            return res.status(403).json({ message: 'You cannot demote your own owner account' });
+        }
         user.role = 'user';
         await user.save();
         res.json({
             user: {
                 id: user._id,
-                name: user.name,
-                email: user.email,
+                name: user.name || (user.role === 'guest' ? 'Guest' : user.name),
+                email: user.email || (user.role === 'guest' ? 'N/A' : user.email),
                 role: user.role,
-                status: user.status,
+                status: user.status || 'active',
                 lastLogin: user.lastLogin
             }
         });
@@ -492,6 +746,10 @@ app.patch('/api/users/ban', checkOwnerAuth, async (req, res, next) => {
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
+        if (id === req.session.userId && user.role === 'owner') {
+            console.log(`Owner ${req.session.userId} attempted to ban themselves`);
+            return res.status(403).json({ message: 'You cannot ban your own owner account' });
+        }
         if (user.status === 'banned') {
             return res.status(400).json({ message: 'User is already banned' });
         }
@@ -500,10 +758,10 @@ app.patch('/api/users/ban', checkOwnerAuth, async (req, res, next) => {
         res.json({
             user: {
                 id: user._id,
-                name: user.name,
-                email: user.email,
+                name: user.name || (user.role === 'guest' ? 'Guest' : user.name),
+                email: user.email || (user.role === 'guest' ? 'N/A' : user.email),
                 role: user.role,
-                status: user.status,
+                status: user.status || 'active',
                 lastLogin: user.lastLogin
             }
         });
@@ -522,6 +780,10 @@ app.patch('/api/users/unban', checkOwnerAuth, async (req, res, next) => {
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
+        if (id === req.session.userId && user.role === 'owner') {
+            console.log(`Owner ${req.session.userId} attempted to unban themselves`);
+            return res.status(403).json({ message: 'You cannot unban your own owner account' });
+        }
         if (user.status !== 'banned') {
             return res.status(400).json({ message: 'User is not banned' });
         }
@@ -530,10 +792,10 @@ app.patch('/api/users/unban', checkOwnerAuth, async (req, res, next) => {
         res.json({
             user: {
                 id: user._id,
-                name: user.name,
-                email: user.email,
+                name: user.name || (user.role === 'guest' ? 'Guest' : user.name),
+                email: user.email || (user.role === 'guest' ? 'N/A' : user.email),
                 role: user.role,
-                status: user.status,
+                status: user.status || 'active',
                 lastLogin: user.lastLogin
             }
         });
@@ -552,6 +814,10 @@ app.delete('/api/users', checkOwnerAuth, async (req, res, next) => {
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
+        if (id === req.session.userId && user.role === 'owner') {
+            console.log(`Owner ${req.session.userId} attempted to delete themselves`);
+            return res.status(403).json({ message: 'You cannot delete your own owner account' });
+        }
         await userModel.deleteOne({ _id: id });
         res.json({ message: 'User deleted' });
     } catch (err) {
@@ -559,34 +825,6 @@ app.delete('/api/users', checkOwnerAuth, async (req, res, next) => {
     }
 });
 
-// Moderator Routes
-app.get('/api/moderator/reports', checkModAuth, async (req, res, next) => {
-    try {
-        const reports = await reportModel.find();
-        res.json(reports);
-    } catch (err) {
-        next(err);
-    }
-});
-
-app.post('/api/moderator/warnings', checkModAuth, async (req, res, next) => {
-    try {
-        const { userId, reason, message } = req.body;
-        if (!userId || !reason || !message || !validateObjectId(userId, res)) {
-            return;
-        }
-        const newWarning = await warningModel.create({
-            userId,
-            reason,
-            message
-        });
-        res.json({ message: 'Warning issued', warning: newWarning });
-    } catch (err) {
-        next(err);
-    }
-});
-
-// Profile Routes
 app.get('/profile', checkAuth, async (req, res, next) => {
     try {
         const user = await userModel.findById(req.session.userId);
@@ -650,7 +888,6 @@ app.patch('/api/profile/password', checkAuth, async (req, res, next) => {
     }
 });
 
-// Posts Routes
 app.post('/api/posts', checkAuth, upload.single('fileUpload'), async (req, res, next) => {
     try {
         const { content, linkInput } = req.body;
@@ -718,7 +955,6 @@ app.delete('/api/posts', checkAuth, async (req, res, next) => {
     }
 });
 
-// Messages Routes
 app.post('/api/messages', checkAuth, async (req, res, next) => {
     try {
         const { message, recipientId } = req.body;
@@ -760,7 +996,6 @@ app.get('/api/messages/unread-count', checkAuth, async (req, res, next) => {
     }
 });
 
-// Friend Requests Routes
 app.post('/api/friend-requests', checkAuth, async (req, res, next) => {
     try {
         const { friendId } = req.body;
@@ -840,7 +1075,6 @@ app.delete('/api/friend-requests/:id', checkAuth, async (req, res, next) => {
     }
 });
 
-// Story Routes
 app.post('/api/stories', checkAuth, upload.single('media'), async (req, res, next) => {
     try {
         if (!req.file) {
@@ -865,26 +1099,6 @@ app.get('/api/stories', async (req, res, next) => {
             .sort({ createdAt: -1 })
             .limit(10);
         res.json(stories);
-    } catch (err) {
-        next(err);
-    }
-});
-
-// Reddit Route
-app.get('/reddit-posts', async (req, res, next) => {
-    const subreddit = req.query.subreddit || 'technology';
-    const after = req.query.after || '';
-    if (!/^[a-zA-Z0-9_]+$/.test(subreddit)) {
-        return res.status(400).json({ error: 'Invalid subreddit name' });
-    }
-    try {
-        const response = await axios.get(`https://www.reddit.com/r/${subreddit}/new.json?after=${after}`, {
-            headers: { 'User-Agent': 'SocialApp/1.0' }
-        });
-        if (response.status !== 200) {
-            throw new Error(`Reddit API returned status: ${response.status}`);
-        }
-        res.json(response.data);
     } catch (err) {
         next(err);
     }

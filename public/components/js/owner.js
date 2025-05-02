@@ -6,10 +6,30 @@ let itemsPerPage = 5;
 let users = []; // Populated by fetchUsers
 let filteredUsers = [];
 let activeTab = 'all';
+let loggedInOwnerId = null; // Store logged-in owner's ID
 
 // Clear any residual localStorage
 function clearLocalStorage() {
     localStorage.clear();
+}
+
+// Format timestamp to human-readable date
+function formatDate(timestamp) {
+    if (!timestamp) return 'Never';
+    try {
+        const date = new Date(timestamp);
+        return date.toLocaleString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: 'numeric',
+            minute: '2-digit',
+            hour12: true
+        });
+    } catch (err) {
+        console.error('Error formatting date:', err);
+        return timestamp; // Fallback to raw timestamp if parsing fails
+    }
 }
 
 // Check if user is logged in and has owner role
@@ -36,6 +56,8 @@ async function checkAuth(authElements, dashboardElements) {
         if (response.ok) {
             const data = await response.json();
             if (data.user && data.user.role === 'owner' && data.user.email) {
+                loggedInOwnerId = data.user.id; // Store owner's ID
+                console.log('Logged-in owner ID:', loggedInOwnerId); // Debug
                 loginSection.classList.add('hidden');
                 dashboardSection.classList.remove('hidden');
                 if (dashboardElements.userTableBody) {
@@ -65,11 +87,15 @@ async function fetchUsers(dashboardElements) {
         });
         if (response.ok) {
             const data = await response.json();
-            users = data.users;
+            users = []; // Clear existing users to avoid stale data
+            users = data.users || [];
             filteredUsers = [...users];
+            console.log('Fetched users:', users); // Debug: Log fetched users
             updateDashboard(dashboardElements);
         } else {
-            showToast(dashboardElements, 'Error', 'Failed to fetch users.', 'error');
+            const errorData = await response.json();
+            console.error('Failed to fetch users:', response.status, errorData);
+            showToast(dashboardElements, 'Error', errorData.message || 'Failed to fetch users.', 'error');
         }
     } catch (err) {
         console.error('Error fetching users:', err);
@@ -132,7 +158,7 @@ function applyFilters(dashboardElements) {
     filteredUsers = users.filter(user => {
         const matchesSearch =
             user.name.toLowerCase().includes(searchTerm) ||
-            user.email.toLowerCase().includes(searchTerm);
+            (user.email && user.email.toLowerCase().includes(searchTerm));
 
         let matchesRole = true;
         if (activeTab === 'admins') {
@@ -214,9 +240,58 @@ function renderTable(dashboardElements) {
                 roleIcon = 'fa-crown';
             }
 
+            const guestTooltip = user.role === 'guest' ? 'title="Guest users have no persistent account and cannot be modified"' : '';
+            const emailDisplay = user.role === 'guest' || !user.email || user.email === '-' ? 'N/A' : user.email;
+            const isOwner = user.id == loggedInOwnerId; // Check if user is the logged-in owner
+            const actionsDisplay = user.role === 'guest' || isOwner ? 'N/A' : `
+                <div class="flex space-x-2">
+                    <button class="text-primary-600 hover:text-primary-800 transition-colors edit-user" data-id="${user.id}" title="Edit User">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    ${user.role === 'admin' ? `
+                        <button class="text-yellow-600 hover:text-yellow-800 transition-colors demote-admin" data-id="${user.id}" title="Demote Admin">
+                            <i class="fas fa-user-minus"></i>
+                        </button>
+                    ` : user.role === 'moderator' ? `
+                        <button class="text-yellow-600 hover:text-yellow-800 transition-colors demote-mod" data-id="${user.id}" title="Demote Moderator">
+                            <i class="fas fa-user-minus"></i>
+                        </button>
+                    ` : user.role === 'user' ? `
+                        <button class="text-yellow-600 hover:text-yellow-800 transition-colors demote-to-guest" data-id="${user.id}" title="Demote to Guest">
+                            <i class="fas fa-user-minus"></i>
+                        </button>
+                    ` : ''}
+                    ${user.status !== 'banned' ? `
+                        <button class="text-red-600 hover:text-red-800 transition-colors ban-user" data-id="${user.id}" title="Ban User">
+                            <i class="fas fa-ban"></i>
+                        </button>
+                    ` : `
+                        <button class="text-green-600 hover:text-green-800 transition-colors unban-user" data-id="${user.id}" title="Unban User">
+                            <i class="fas fa-user-check"></i>
+                        </button>
+                    `}
+                    <button class="text-red-600 hover:text-red-800 transition-colors delete-user" data-id="${user.id}" title="Delete User">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </div>
+            `;
+
+            // Debug log for guest and owner users
+            if (user.role === 'guest' || isOwner) {
+                console.log(`${isOwner ? 'Owner' : 'Guest'} user data:`, {
+                    id: user.id,
+                    email: user.email,
+                    name: user.name,
+                    role: user.role,
+                    status: user.status,
+                    lastLogin: user.lastLogin
+                });
+                console.log(`${isOwner ? 'Owner' : 'Guest'} user actions rendered:`, actionsDisplay);
+            }
+
             row.innerHTML = `
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${user.name}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${user.email}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700" ${guestTooltip}>${user.name || 'Guest'}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500" ${guestTooltip}>${emailDisplay}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     <span class="px-2 py-1 inline-flex items-center text-xs leading-5 font-semibold rounded-full ${roleClass}">
                         <i class="fas ${roleIcon} mr-1"></i> ${user.role}
@@ -227,35 +302,8 @@ function renderTable(dashboardElements) {
                         <i class="fas ${statusIcon} mr-1"></i> ${user.status}
                     </span>
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${user.lastLogin}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <div class="flex space-x-2">
-                        <button class="text-primary-600 hover:text-primary-800 transition-colors edit-user" data-id="${user.id}" title="Edit User">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        ${user.role === 'admin' ? `
-                            <button class="text-yellow-600 hover:text-yellow-800 transition-colors demote-admin" data-id="${user.id}" title="Demote Admin">
-                                <i class="fas fa-user-minus"></i>
-                            </button>
-                        ` : user.role === 'moderator' ? `
-                            <button class="text-yellow-600 hover:text-yellow-800 transition-colors demote-mod" data-id="${user.id}" title="Demote Moderator">
-                                <i class="fas fa-user-minus"></i>
-                            </button>
-                        ` : ''}
-                        ${user.status !== 'banned' ? `
-                            <button class="text-red-600 hover:text-red-800 transition-colors ban-user" data-id="${user.id}" title="Ban User">
-                                <i class="fas fa-ban"></i>
-                            </button>
-                        ` : `
-                            <button class="text-green-600 hover:text-green-800 transition-colors unban-user" data-id="${user.id}" title="Unban User">
-                                <i class="fas fa-user-check"></i>
-                            </button>
-                        `}
-                        <button class="text-red-600 hover:text-red-800 transition-colors delete-user" data-id="${user.id}" title="Delete User">
-                            <i class="fas fa-trash-alt"></i>
-                        </button>
-                    </div>
-                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${formatDate(user.lastLogin)}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">${actionsDisplay}</td>
             `;
 
             userTableBody.appendChild(row);
@@ -287,9 +335,28 @@ function renderTable(dashboardElements) {
             });
         });
 
+        document.querySelectorAll('.demote-to-guest').forEach(button => {
+            button.addEventListener('click', () => {
+                const userId = button.getAttribute('data-id');
+                showConfirmationModal(
+                    'Demote to Guest',
+                    'Are you sure you want to demote this user to a guest? This will remove their persistent account details and cannot be undone.',
+                    'danger',
+                    () => {
+                        demoteToGuest(userId, dashboardElements);
+                    },
+                    dashboardElements
+                );
+            });
+        });
+
         document.querySelectorAll('.ban-user').forEach(button => {
             button.addEventListener('click', () => {
                 const userId = button.getAttribute('data-id');
+                if (userId == loggedInOwnerId) {
+                    showToast(dashboardElements, 'Error', 'You cannot ban your own account.', 'error');
+                    return;
+                }
                 showConfirmationModal('Ban User', 'Are you sure you want to ban this user? They will be unable to access their account.', 'danger', () => {
                     banUser(userId, dashboardElements);
                 }, dashboardElements);
@@ -299,6 +366,10 @@ function renderTable(dashboardElements) {
         document.querySelectorAll('.unban-user').forEach(button => {
             button.addEventListener('click', () => {
                 const userId = button.getAttribute('data-id');
+                if (userId == loggedInOwnerId) {
+                    showToast(dashboardElements, 'Error', 'You cannot unban your own account.', 'error');
+                    return;
+                }
                 showConfirmationModal('Unban User', 'Are you sure you want to unban this user? They will regain access to their account.', 'info', () => {
                     unbanUser(userId, dashboardElements);
                 }, dashboardElements);
@@ -308,6 +379,10 @@ function renderTable(dashboardElements) {
         document.querySelectorAll('.delete-user').forEach(button => {
             button.addEventListener('click', () => {
                 const userId = button.getAttribute('data-id');
+                if (userId == loggedInOwnerId) {
+                    showToast(dashboardElements, 'Error', 'You cannot delete your own account.', 'error');
+                    return;
+                }
                 showConfirmationModal('Delete User', 'Are you sure you want to permanently delete this user?', 'danger', () => {
                     deleteUser(userId, dashboardElements);
                 }, dashboardElements);
@@ -334,11 +409,15 @@ async function openEditModal(userId, dashboardElements) {
         const isOwnerEditingSelf = user && loggedInUser.id == user.id; // Use id for comparison
 
         if (user && editUserModal) {
-            editName.value = user.name;
-            editEmail.value = user.email;
+            editName.value = user.name || 'Guest';
+            editEmail.value = user.role === 'guest' || !user.email || user.email === '-' ? 'N/A' : user.email;
             editRole.value = user.role;
             editStatus.value = user.status;
 
+            // Store userId in form dataset
+            editUserForm.dataset.userId = userId;
+
+            // Restrict editing for non-self users or owner editing self
             if (!isOwnerEditingSelf) {
                 editName.disabled = true;
                 editName.classList.add('bg-gray-100', 'cursor-not-allowed');
@@ -360,6 +439,24 @@ async function openEditModal(userId, dashboardElements) {
                 if (note) note.remove();
             }
 
+            // Prevent owner from changing their own role
+            if (isOwnerEditingSelf) {
+                editRole.disabled = true;
+                editRole.classList.add('bg-gray-100', 'cursor-not-allowed');
+                let ownerNote = editUserModal.querySelector('.owner-restriction-note');
+                if (!ownerNote) {
+                    ownerNote = document.createElement('p');
+                    ownerNote.className = 'owner-restriction-note text-sm text-gray-500 mb-4';
+                    ownerNote.textContent = 'Owner role cannot be changed for security reasons.';
+                    editUserForm.insertBefore(ownerNote, editUserForm.firstChild);
+                }
+            } else {
+                editRole.disabled = false;
+                editRole.classList.remove('bg-gray-100', 'cursor-not-allowed');
+                const ownerNote = editUserModal.querySelector('.owner-restriction-note');
+                if (note) note.remove();
+            }
+
             editUserModal.classList.remove('hidden');
         } else {
             throw new Error('User not found or modal unavailable');
@@ -378,7 +475,7 @@ async function demoteUser(userId, fromRole, dashboardElements) {
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ id: userId, fromRole }), // Use id
+            body: JSON.stringify({ id: userId, fromRole }),
             credentials: 'include',
         });
 
@@ -387,6 +484,7 @@ async function demoteUser(userId, fromRole, dashboardElements) {
             showToast(dashboardElements, 'User Demoted', `User has been demoted to a regular user.`, 'success');
         } else {
             const data = await response.json();
+            console.error('Demote user failed:', response.status, data);
             showToast(dashboardElements, 'Error', data.message || 'Failed to demote user.', 'error');
         }
     } catch (err) {
@@ -395,15 +493,48 @@ async function demoteUser(userId, fromRole, dashboardElements) {
     }
 }
 
+// Demote regular user to guest
+async function demoteToGuest(userId, dashboardElements) {
+    try {
+        const payload = { id: userId, role: 'guest', email: null, name: null };
+        console.log('Demote to guest payload:', payload); // Debug: Log payload
+        const response = await fetch(`/api/users`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(payload),
+            credentials: 'include',
+        });
+
+        if (response.ok) {
+            await fetchUsers(dashboardElements);
+            showToast(dashboardElements, 'User Demoted', 'User has been demoted to a guest.', 'success');
+        } else {
+            const data = await response.json();
+            console.error('Demote to guest failed:', response.status, data);
+            showToast(dashboardElements, 'Error', data.message || 'Failed to demote user to guest.', 'error');
+        }
+    } catch (err) {
+        console.error('Error demoting to guest:', err);
+        showToast(dashboardElements, 'Error', 'Failed to demote user to guest.', 'error');
+    }
+}
+
 // Ban user
 async function banUser(userId, dashboardElements) {
+    if (userId == loggedInOwnerId) {
+        console.error('Attempted to ban owner account:', userId);
+        showToast(dashboardElements, 'Error', 'You cannot ban your own account.', 'error');
+        return;
+    }
     try {
         const response = await fetch(`/api/users/ban`, {
             method: 'PATCH',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ id: userId }), // Use id
+            body: JSON.stringify({ id: userId }),
             credentials: 'include',
         });
 
@@ -412,6 +543,7 @@ async function banUser(userId, dashboardElements) {
             showToast(dashboardElements, 'User Banned', 'User has been banned from the platform.', 'success');
         } else {
             const data = await response.json();
+            console.error('Ban user failed:', response.status, data);
             showToast(dashboardElements, 'Error', data.message || 'Failed to ban user.', 'error');
         }
     } catch (err) {
@@ -422,13 +554,18 @@ async function banUser(userId, dashboardElements) {
 
 // Unban user
 async function unbanUser(userId, dashboardElements) {
+    if (userId == loggedInOwnerId) {
+        console.error('Attempted to unban owner account:', userId);
+        showToast(dashboardElements, 'Error', 'You cannot unban your own account.', 'error');
+        return;
+    }
     try {
         const response = await fetch(`/api/users/unban`, {
             method: 'PATCH',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ id: userId }), // Use id
+            body: JSON.stringify({ id: userId }),
             credentials: 'include',
         });
 
@@ -437,6 +574,7 @@ async function unbanUser(userId, dashboardElements) {
             showToast(dashboardElements, 'User Unbanned', 'User has been unbanned and can now access their account.', 'success');
         } else {
             const data = await response.json();
+            console.error('Unban user failed:', response.status, data);
             showToast(dashboardElements, 'Error', data.message || 'Failed to unban user.', 'error');
         }
     } catch (err) {
@@ -447,13 +585,18 @@ async function unbanUser(userId, dashboardElements) {
 
 // Delete user (permanently)
 async function deleteUser(userId, dashboardElements) {
+    if (userId == loggedInOwnerId) {
+        console.error('Attempted to delete owner account:', userId);
+        showToast(dashboardElements, 'Error', 'You cannot delete your own account.', 'error');
+        return;
+    }
     try {
         const response = await fetch(`/api/users`, {
             method: 'DELETE',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ id: userId }), // Use id
+            body: JSON.stringify({ id: userId }),
             credentials: 'include',
         });
 
@@ -462,6 +605,7 @@ async function deleteUser(userId, dashboardElements) {
             showToast(dashboardElements, 'User Deleted', 'User has been permanently deleted.', 'success');
         } else {
             const data = await response.json();
+            console.error('Delete user failed:', response.status, data);
             showToast(dashboardElements, 'Error', data.message || 'Failed to delete user.', 'error');
         }
     } catch (err) {
@@ -559,6 +703,56 @@ function setActiveTab(tab, dashboardElements) {
     applyFilters(dashboardElements);
 }
 
+// Submit user edit
+async function submitUserEdit(userId, dashboardElements) {
+    const { editName, editEmail, editRole, editStatus, editUserModal } = dashboardElements;
+    try {
+        // Create payload, excluding undefined values
+        const payload = { id: userId };
+        if (!editName.disabled && editName.value) payload.name = editName.value;
+        if (!editEmail.disabled && editEmail.value && editEmail.value !== 'N/A') payload.email = editEmail.value;
+        if (!editRole.disabled && editRole.value) payload.role = editRole.value;
+        if (editStatus.value) payload.status = editStatus.value;
+
+        // If demoting to guest, ensure email and name are null
+        if (payload.role === 'guest') {
+            payload.email = null;
+            payload.name = null;
+        }
+
+        console.log('Submitting user edit payload:', payload); // Debug: Log payload
+
+        const response = await fetch(`/api/users`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(payload),
+            credentials: 'include',
+        });
+
+        if (response.ok) {
+            await fetchUsers(dashboardElements);
+            editUserModal.classList.add('hidden');
+            const user = users.find(u => u.id == userId);
+            console.log('User after update:', user); // Debug: Log updated user
+            showToast(
+                dashboardElements,
+                'User Updated',
+                payload.role === 'guest' ? 'User has been demoted to a guest.' : 'User details have been updated successfully.',
+                'success'
+            );
+        } else {
+            const data = await response.json();
+            console.error('User edit failed:', response.status, data);
+            showToast(dashboardElements, 'Error', data.message || 'Failed to update user.', 'error');
+        }
+    } catch (err) {
+        console.error('Error updating user:', err);
+        showToast(dashboardElements, 'Error', 'Failed to update user.', 'error');
+    }
+}
+
 // Event Listeners
 document.addEventListener('DOMContentLoaded', () => {
     clearLocalStorage();
@@ -619,7 +813,7 @@ document.addEventListener('DOMContentLoaded', () => {
         moderatorsTab: document.getElementById('moderatorsTab'),
         usersTab: document.getElementById('usersTab'),
         guestsTab: document.getElementById('guestsTab'),
-        banned: document.getElementById('bannedTab'),
+        bannedTab: document.getElementById('bannedTab'),
         menuBtn: document.getElementById('menu-btn'),
         closeMenu: document.getElementById('close-menu'),
         mobileMenu: document.getElementById('mobile-menu'),
@@ -719,35 +913,23 @@ document.addEventListener('DOMContentLoaded', () => {
     if (dashboardElements.editUserForm) {
         dashboardElements.editUserForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const userId = users.find(u => u.email === dashboardElements.editEmail.value)?.id; // Get id from email
+            const userId = dashboardElements.editUserForm.dataset.userId; // Get userId from form dataset
+            const user = users.find(u => u.id == userId);
+            const newRole = dashboardElements.editRole.value;
 
-            try {
-                const response = await fetch(`/api/users`, {
-                    method: 'PATCH',
-                    headers: {
-                        'Content-Type': 'application/json',
+            // Check if changing a non-guest to guest
+            if (user && user.role !== 'guest' && newRole === 'guest') {
+                showConfirmationModal(
+                    'Demote to Guest',
+                    'Are you sure you want to demote this user to a guest? This will remove their persistent account details (name and email) and cannot be undone.',
+                    'danger',
+                    async () => {
+                        await submitUserEdit(userId, dashboardElements);
                     },
-                    body: JSON.stringify({
-                        id: userId, // Use id
-                        name: dashboardElements.editName.disabled ? undefined : dashboardElements.editName.value,
-                        email: dashboardElements.editEmail.disabled ? undefined : dashboardElements.editEmail.value,
-                        role: dashboardElements.editRole.value,
-                        status: dashboardElements.editStatus.value,
-                    }),
-                    credentials: 'include',
-                });
-
-                if (response.ok) {
-                    await fetchUsers(dashboardElements);
-                    dashboardElements.editUserModal.classList.add('hidden');
-                    showToast(dashboardElements, 'User Updated', 'User details have been updated successfully.', 'success');
-                } else {
-                    const data = await response.json();
-                    showToast(dashboardElements, 'Error', data.message || 'Failed to update user.', 'error');
-                }
-            } catch (err) {
-                console.error('Error updating user:', err);
-                showToast(dashboardElements, 'Error', 'Failed to update user.', 'error');
+                    dashboardElements
+                );
+            } else {
+                await submitUserEdit(userId, dashboardElements);
             }
         });
     }
