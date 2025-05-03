@@ -59,7 +59,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Fetch from /api/me
             const user = await isUserLoggedIn();
-            if (user && user.profilePhoto) { // Use profilePhoto to match homePage.ejs
+            if (user && user.profilePhoto) {
                 profileImg.src = user.profilePhoto;
                 try {
                     localStorage.setItem('profilePicture', user.profilePhoto);
@@ -229,6 +229,7 @@ document.addEventListener('DOMContentLoaded', () => {
             formData.append('content', content);
             if (file) formData.append('fileUpload', file);
             if (link) formData.append('linkInput', link);
+            formData.append('createdAt', new Date().toISOString()); // Add creation timestamp
 
             try {
                 const response = await fetch('/api/posts', {

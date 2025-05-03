@@ -1,0 +1,1057 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nexus | Social Network</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #1e293b;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #475569;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #64748b;
+        }
+
+        /* Pulse animation for notifications */
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        .animate-pulse {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        /* Custom transitions */
+        .transition-slow {
+            transition: all 0.5s ease;
+        }
+
+        /* Gradient text */
+        .gradient-text {
+            background: linear-gradient(90deg, #6366f1, #8b5cf6);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        /* Story ring gradient */
+        .story-ring {
+            background: linear-gradient(45deg, #f59e0b, #ef4444, #ec4899, #8b5cf6);
+        }
+
+        /* Post card shine effect */
+        .post-card:hover {
+            box-shadow: 0 10px 25px -5px rgba(99, 102, 241, 0.1);
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+
+<body class="bg-gray-900 text-gray-100 min-h-screen">
+    <!-- Navigation Bar -->
+    <nav class="bg-gray-800 border-b border-gray-700 fixed w-full z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <!-- Logo -->
+                <div class="flex-shrink-0 flex items-center">
+                    <span class="text-xl font-bold gradient-text">Nexus</span>
+                </div>
+
+                <!-- Search Bar -->
+                <div class="flex-1 px-4 max-w-xl">
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-search text-gray-400"></i>
+                        </div>
+                        <input type="text" placeholder="Search Nexus..."
+                            class="bg-gray-700 w-full py-2 pl-10 pr-4 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 border border-gray-600">
+                    </div>
+                </div>
+
+                <!-- Navigation Icons -->
+                <div class="hidden md:flex items-center space-x-6">
+                    <a href="#" class="text-indigo-400 hover:text-indigo-300 transition-slow">
+                        <i class="fas fa-home text-xl"></i>
+                    </a>
+                    <a href="#" class="text-gray-400 hover:text-gray-200 transition-slow relative">
+                        <i class="fas fa-users text-xl"></i>
+                    </a>
+                    <a href="#" class="text-gray-400 hover:text-gray-200 transition-slow relative">
+                        <i class="fas fa-video text-xl"></i>
+                    </a>
+                    <a href="#" class="text-gray-400 hover:text-gray-200 transition-slow relative">
+                        <i class="fas fa-store text-xl"></i>
+                    </a>
+                    <a href="#" class="text-gray-400 hover:text-gray-200 transition-slow relative">
+                        <i class="fas fa-gamepad text-xl"></i>
+                    </a>
+                </div>
+
+                <!-- User Menu -->
+                <div class="flex items-center space-x-4">
+                    <button class="bg-gray-700 p-1 rounded-full text-gray-300 hover:text-gray-100 focus:outline-none">
+                        <i class="fas fa-bell text-lg relative">
+                            <span class="absolute -top-1 -right-1 h-3 w-3 bg-red-500 rounded-full animate-pulse"></span>
+                        </i>
+                    </button>
+                    <button class="bg-gray-700 p-1 rounded-full text-gray-300 hover:text-gray-100 focus:outline-none">
+                        <i class="fas fa-comment-dots text-lg relative">
+                            <span class="absolute -top-1 -right-1 h-3 w-3 bg-green-500 rounded-full"></span>
+                        </i>
+                    </button>
+                    <div class="relative">
+                        <button id="user-menu" class="flex items-center space-x-1 focus:outline-none">
+                            <div
+                                class="h-8 w-8 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 flex items-center justify-center text-white font-semibold">
+                                JD</div>
+                            <i class="fas fa-chevron-down text-xs text-gray-400"></i>
+                        </button>
+                        <div id="user-dropdown"
+                            class="hidden absolute right-0 mt-2 w-48 bg-gray-800 rounded-md shadow-lg py-1 border border-gray-700 z-50">
+                            <a href="#" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700">Profile</a>
+                            <a href="#" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700">Settings</a>
+                            <a href="#" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700">Saved</a>
+                            <div class="border-t border-gray-700"></div>
+                            <a href="#" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700">Log out</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="pt-16 pb-20 flex max-w-7xl mx-auto">
+        <!-- Left Sidebar -->
+        <div class="hidden lg:block w-64 fixed h-screen overflow-y-auto pt-4 px-4 border-r border-gray-800">
+            <div class="space-y-4">
+                <!-- User Profile -->
+                <div class="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-800 cursor-pointer">
+                    <div
+                        class="h-9 w-9 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 flex items-center justify-center text-white font-semibold">
+                        JD</div>
+                    <span class="font-medium">John Doe</span>
+                </div>
+
+                <!-- Shortcuts -->
+                <div class="pt-4">
+                    <h3 class="text-gray-500 uppercase text-xs font-semibold px-2 mb-2">Your Shortcuts</h3>
+                    <div class="space-y-1">
+                        <a href="#" class="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-800">
+                            <div class="h-7 w-7 rounded-md bg-blue-500 flex items-center justify-center text-white">
+                                <i class="fas fa-users text-xs"></i>
+                            </div>
+                            <span>Friends</span>
+                        </a>
+                        <a href="#" class="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-800">
+                            <div class="h-7 w-7 rounded-md bg-green-500 flex items-center justify-center text-white">
+                                <i class="fas fa-calendar text-xs"></i>
+                            </div>
+                            <span>Events</span>
+                        </a>
+                        <a href="#" class="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-800">
+                            <div class="h-7 w-7 rounded-md bg-yellow-500 flex items-center justify-center text-white">
+                                <i class="fas fa-bookmark text-xs"></i>
+                            </div>
+                            <span>Saved</span>
+                        </a>
+                        <a href="#" class="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-800">
+                            <div class="h-7 w-7 rounded-md bg-red-500 flex items-center justify-center text-white">
+                                <i class="fas fa-flag text-xs"></i>
+                            </div>
+                            <span>Pages</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Groups -->
+                <div class="pt-4">
+                    <h3 class="text-gray-500 uppercase text-xs font-semibold px-2 mb-2">Groups</h3>
+                    <div class="space-y-1">
+                        <a href="#" class="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-800">
+                            <div class="h-7 w-7 rounded-md bg-indigo-500 flex items-center justify-center text-white">
+                                <i class="fas fa-code text-xs"></i>
+                            </div>
+                            <span>Developers</span>
+                        </a>
+                        <a href="#" class="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-800">
+                            <div class="h-7 w-7 rounded-md bg-purple-500 flex items-center justify-center text-white">
+                                <i class="fas fa-music text-xs"></i>
+                            </div>
+                            <span>Music Lovers</span>
+                        </a>
+                        <a href="#" class="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-800">
+                            <div class="h-7 w-7 rounded-md bg-pink-500 flex items-center justify-center text-white">
+                                <i class="fas fa-camera text-xs"></i>
+                            </div>
+                            <span>Photography</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Footer Links -->
+                <div class="pt-4 pb-8 text-xs text-gray-500 px-2">
+                    <div class="flex flex-wrap gap-2">
+                        <a href="#" class="hover:underline">Privacy</a>
+                        <span>·</span>
+                        <a href="#" class="hover:underline">Terms</a>
+                        <span>·</span>
+                        <a href="#" class="hover:underline">Advertising</a>
+                        <span>·</span>
+                        <a href="#" class="hover:underline">Cookies</a>
+                    </div>
+                    <p class="mt-2">© 2023 Nexus</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Feed -->
+        <div class="flex-1 lg:ml-64 px-4 py-4">
+            <!-- Stories -->
+            <div class="bg-gray-800 rounded-xl p-4 mb-4 border border-gray-700">
+                <div class="flex space-x-4 overflow-x-auto pb-2 scrollbar-hide">
+                    <!-- Create Story -->
+                    <div class="flex-shrink-0 relative w-32 h-48 rounded-xl overflow-hidden cursor-pointer">
+                        <div class="absolute inset-0 bg-gray-700">
+                            <div class="h-2/3 bg-gray-600"></div>
+                            <div class="h-1/3 bg-gray-800 flex flex-col items-center justify-center">
+                                <div class="bg-indigo-500 rounded-full p-1 -mt-5 mb-1">
+                                    <i class="fas fa-plus text-white text-sm"></i>
+                                </div>
+                                <span class="text-xs font-medium">Create Story</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Stories -->
+                    <div
+                        class="flex-shrink-0 relative w-32 h-48 rounded-xl overflow-hidden cursor-pointer story-ring p-0.5">
+                        <div class="absolute inset-0 bg-gray-800 rounded-xl">
+                            <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="Story"
+                                class="h-full w-full object-cover">
+                            <div class="absolute bottom-2 left-2">
+                                <div
+                                    class="h-8 w-8 rounded-full border-2 border-indigo-500 bg-gray-800 flex items-center justify-center">
+                                    <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="User"
+                                        class="h-7 w-7 rounded-full object-cover">
+                                </div>
+                                <span class="text-xs font-medium absolute bottom-0 left-10 text-white">Sarah</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div
+                        class="flex-shrink-0 relative w-32 h-48 rounded-xl overflow-hidden cursor-pointer story-ring p-0.5">
+                        <div class="absolute inset-0 bg-gray-800 rounded-xl">
+                            <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="Story"
+                                class="h-full w-full object-cover">
+                            <div class="absolute bottom-2 left-2">
+                                <div
+                                    class="h-8 w-8 rounded-full border-2 border-indigo-500 bg-gray-800 flex items-center justify-center">
+                                    <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="User"
+                                        class="h-7 w-7 rounded-full object-cover">
+                                </div>
+                                <span class="text-xs font-medium absolute bottom-0 left-10 text-white">Mike</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div
+                        class="flex-shrink-0 relative w-32 h-48 rounded-xl overflow-hidden cursor-pointer story-ring p-0.5">
+                        <div class="absolute inset-0 bg-gray-800 rounded-xl">
+                            <img src="https://randomuser.me/api/portraits/women/68.jpg" alt="Story"
+                                class="h-full w-full object-cover">
+                            <div class="absolute bottom-2 left-2">
+                                <div
+                                    class="h-8 w-8 rounded-full border-2 border-indigo-500 bg-gray-800 flex items-center justify-center">
+                                    <img src="https://randomuser.me/api/portraits/women/68.jpg" alt="User"
+                                        class="h-7 w-7 rounded-full object-cover">
+                                </div>
+                                <span class="text-xs font-medium absolute bottom-0 left-10 text-white">Emma</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div
+                        class="flex-shrink-0 relative w-32 h-48 rounded-xl overflow-hidden cursor-pointer story-ring p-0.5">
+                        <div class="absolute inset-0 bg-gray-800 rounded-xl">
+                            <img src="https://randomuser.me/api/portraits/men/75.jpg" alt="Story"
+                                class="h-full w-full object-cover">
+                            <div class="absolute bottom-2 left-2">
+                                <div
+                                    class="h-8 w-8 rounded-full border-2 border-indigo-500 bg-gray-800 flex items-center justify-center">
+                                    <img src="https://randomuser.me/api/portraits/men/75.jpg" alt="User"
+                                        class="h-7 w-7 rounded-full object-cover">
+                                </div>
+                                <span class="text-xs font-medium absolute bottom-0 left-10 text-white">David</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Create Post -->
+            <div class="bg-gray-800 rounded-xl p-4 mb-4 border border-gray-700">
+                <div class="flex items-center space-x-3">
+                    <div
+                        class="h-10 w-10 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 flex items-center justify-center text-white font-semibold">
+                        JD</div>
+                    <button onclick="openPostModal()"
+                        class="flex-1 bg-gray-700 hover:bg-gray-600 text-gray-300 text-left px-4 py-2 rounded-full transition-slow">What's
+                        on your mind, John?</button>
+                </div>
+                <div class="flex justify-between pt-3 mt-3 border-t border-gray-700">
+                    <button
+                        class="flex-1 flex items-center justify-center space-x-2 text-gray-400 hover:bg-gray-700 py-2 rounded-lg transition-slow">
+                        <i class="fas fa-video text-red-500"></i>
+                        <span>Live Video</span>
+                    </button>
+                    <button
+                        class="flex-1 flex items-center justify-center space-x-2 text-gray-400 hover:bg-gray-700 py-2 rounded-lg transition-slow">
+                        <i class="fas fa-images text-green-500"></i>
+                        <span>Photo/Video</span>
+                    </button>
+                    <button
+                        class="flex-1 flex items-center justify-center space-x-2 text-gray-400 hover:bg-gray-700 py-2 rounded-lg transition-slow">
+                        <i class="fas fa-smile text-yellow-500"></i>
+                        <span>Feeling/Activity</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Posts -->
+            <div id="posts-container">
+                <!-- Sample Post 1 -->
+                <div class="bg-gray-800 rounded-xl p-4 mb-4 border border-gray-700 post-card transition-slow">
+                    <div class="flex justify-between items-start mb-3">
+                        <div class="flex items-center space-x-3">
+                            <div
+                                class="h-10 w-10 rounded-full bg-gradient-to-r from-pink-500 to-red-500 flex items-center justify-center text-white font-semibold">
+                                EM</div>
+                            <div>
+                                <h4 class="font-semibold hover:underline cursor-pointer">Emma Miller</h4>
+                                <div class="flex items-center space-x-1 text-xs text-gray-400">
+                                    <span>2 hrs ago</span>
+                                    <span>·</span>
+                                    <i class="fas fa-globe-americas text-xs"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <button class="text-gray-400 hover:text-gray-200">
+                            <i class="fas fa-ellipsis-h"></i>
+                        </button>
+                    </div>
+
+                    <p class="mb-4">Just finished my morning hike! The view was absolutely breathtaking. Nature always
+                        helps me clear my mind and find new inspiration. 🏞️ #NatureLover #MorningRoutine</p>
+
+                    <div class="mb-3 rounded-xl overflow-hidden">
+                        <img src="https://source.unsplash.com/random/800x600/?mountain" alt="Post"
+                            class="w-full h-auto max-h-96 object-cover">
+                    </div>
+
+                    <div
+                        class="flex items-center justify-between text-gray-400 text-sm border-b border-gray-700 pb-2 mb-2">
+                        <div class="flex items-center space-x-1">
+                            <div
+                                class="h-5 w-5 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs">
+                                <i class="fas fa-thumbs-up"></i>
+                            </div>
+                            <span>124</span>
+                        </div>
+                        <div class="flex space-x-4">
+                            <span class="hover:underline cursor-pointer">32 comments</span>
+                            <span class="hover:underline cursor-pointer">5 shares</span>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-between pt-1">
+                        <button
+                            class="flex-1 flex items-center justify-center space-x-2 text-gray-400 hover:bg-gray-700 py-1 rounded-lg transition-slow reaction-btn"
+                            data-post="1">
+                            <i class="far fa-thumbs-up"></i>
+                            <span>Like</span>
+                        </button>
+                        <button
+                            class="flex-1 flex items-center justify-center space-x-2 text-gray-400 hover:bg-gray-700 py-1 rounded-lg transition-slow">
+                            <i class="far fa-comment"></i>
+                            <span>Comment</span>
+                        </button>
+                        <button
+                            class="flex-1 flex items-center justify-center space-x-2 text-gray-400 hover:bg-gray-700 py-1 rounded-lg transition-slow">
+                            <i class="far fa-share-square"></i>
+                            <span>Share</span>
+                        </button>
+                    </div>
+
+                    <!-- Comments Section (Hidden by default) -->
+                    <div class="mt-3 hidden comments-section" id="comments-1">
+                        <div class="flex items-start space-x-2 mb-3">
+                            <div
+                                class="h-8 w-8 rounded-full bg-gradient-to-r from-blue-500 to-teal-500 flex items-center justify-center text-white text-xs">
+                                TS</div>
+                            <div class="flex-1 bg-gray-700 rounded-xl p-2">
+                                <div class="flex justify-between items-center">
+                                    <span class="font-medium text-sm">Tom Smith</span>
+                                    <span class="text-xs text-gray-400">30 min ago</span>
+                                </div>
+                                <p class="text-sm mt-1">Wow! Where is this? Looks amazing!</p>
+                                <div class="flex items-center space-x-3 text-xs text-gray-400 mt-1">
+                                    <span class="hover:underline cursor-pointer">Like</span>
+                                    <span class="hover:underline cursor-pointer">Reply</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <div
+                                class="h-8 w-8 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 flex items-center justify-center text-white text-xs">
+                                JD</div>
+                            <div class="flex-1">
+                                <input type="text" placeholder="Write a comment..."
+                                    class="bg-gray-700 w-full py-2 px-3 rounded-full text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 border border-gray-600">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sample Post 2 -->
+                <div class="bg-gray-800 rounded-xl p-4 mb-4 border border-gray-700 post-card transition-slow">
+                    <div class="flex justify-between items-start mb-3">
+                        <div class="flex items-center space-x-3">
+                            <div
+                                class="h-10 w-10 rounded-full bg-gradient-to-r from-yellow-500 to-orange-500 flex items-center justify-center text-white font-semibold">
+                                DR</div>
+                            <div>
+                                <h4 class="font-semibold hover:underline cursor-pointer">David Rodriguez</h4>
+                                <div class="flex items-center space-x-1 text-xs text-gray-400">
+                                    <span>5 hrs ago</span>
+                                    <span>·</span>
+                                    <i class="fas fa-user-friends text-xs"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <button class="text-gray-400 hover:text-gray-200">
+                            <i class="fas fa-ellipsis-h"></i>
+                        </button>
+                    </div>
+
+                    <p class="mb-4">Just released my new album "Midnight Dreams" on all platforms! This has been a
+                        2-year journey and I'm so excited to finally share it with you all. Link in bio! 🎶 #NewMusic
+                        #MidnightDreams</p>
+
+                    <div class="mb-3 rounded-xl overflow-hidden bg-gradient-to-r from-purple-900 to-blue-900 p-6">
+                        <div class="flex items-center space-x-4">
+                            <div class="h-24 w-24 rounded-lg bg-black bg-opacity-30 flex items-center justify-center">
+                                <i class="fas fa-music text-3xl text-white"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-lg">Midnight Dreams</h3>
+                                <p class="text-gray-300 text-sm">David Rodriguez</p>
+                                <div class="flex items-center space-x-2 mt-2">
+                                    <button
+                                        class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1 rounded-full text-xs flex items-center space-x-1">
+                                        <i class="fab fa-spotify"></i>
+                                        <span>Listen</span>
+                                    </button>
+                                    <button
+                                        class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1 rounded-full text-xs flex items-center space-x-1">
+                                        <i class="fas fa-share-alt"></i>
+                                        <span>Share</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div
+                        class="flex items-center justify-between text-gray-400 text-sm border-b border-gray-700 pb-2 mb-2">
+                        <div class="flex items-center space-x-1">
+                            <div
+                                class="h-5 w-5 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs">
+                                <i class="fas fa-thumbs-up"></i>
+                            </div>
+                            <span>89</span>
+                        </div>
+                        <div class="flex space-x-4">
+                            <span class="hover:underline cursor-pointer">24 comments</span>
+                            <span class="hover:underline cursor-pointer">12 shares</span>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-between pt-1">
+                        <button
+                            class="flex-1 flex items-center justify-center space-x-2 text-gray-400 hover:bg-gray-700 py-1 rounded-lg transition-slow reaction-btn"
+                            data-post="2">
+                            <i class="far fa-thumbs-up"></i>
+                            <span>Like</span>
+                        </button>
+                        <button
+                            class="flex-1 flex items-center justify-center space-x-2 text-gray-400 hover:bg-gray-700 py-1 rounded-lg transition-slow">
+                            <i class="far fa-comment"></i>
+                            <span>Comment</span>
+                        </button>
+                        <button
+                            class="flex-1 flex items-center justify-center space-x-2 text-gray-400 hover:bg-gray-700 py-1 rounded-lg transition-slow">
+                            <i class="far fa-share-square"></i>
+                            <span>Share</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Loading More Posts -->
+            <div class="flex justify-center mb-8">
+                <button id="load-more"
+                    class="bg-gray-800 hover:bg-gray-700 text-gray-300 px-4 py-2 rounded-lg border border-gray-700 flex items-center space-x-2">
+                    <i class="fas fa-sync-alt"></i>
+                    <span>Load More</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Right Sidebar -->
+        <div class="hidden lg:block w-80 fixed right-0 h-screen overflow-y-auto pt-4 px-4 border-l border-gray-800">
+            <div class="space-y-4">
+                <!-- Sponsored -->
+                <div>
+                    <h3 class="text-gray-500 uppercase text-xs font-semibold px-2 mb-2">Sponsored</h3>
+                    <div class="space-y-3">
+                        <a href="#" class="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-800">
+                            <div class="h-28 w-28 rounded-lg overflow-hidden flex-shrink-0">
+                                <img src="https://source.unsplash.com/random/200x200/?tech" alt="Ad"
+                                    class="h-full w-full object-cover">
+                            </div>
+                            <div>
+                                <h4 class="font-medium">Try our new productivity app</h4>
+                                <p class="text-xs text-gray-400">boostyourproductivity.com</p>
+                            </div>
+                        </a>
+                        <a href="#" class="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-800">
+                            <div class="h-28 w-28 rounded-lg overflow-hidden flex-shrink-0">
+                                <img src="https://source.unsplash.com/random/200x200/?travel" alt="Ad"
+                                    class="h-full w-full object-cover">
+                            </div>
+                            <div>
+                                <h4 class="font-medium">Summer travel deals</h4>
+                                <p class="text-xs text-gray-400">traveladventures.com</p>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Birthdays -->
+                <div class="pt-4">
+                    <h3 class="text-gray-500 uppercase text-xs font-semibold px-2 mb-2">Birthdays</h3>
+                    <div class="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-800">
+                        <div class="h-10 w-10 rounded-full bg-yellow-500 flex items-center justify-center text-white">
+                            <i class="fas fa-gift"></i>
+                        </div>
+                        <p class="text-sm"><span class="font-medium">Sarah Johnson</span> and <span
+                                class="font-medium">2 others</span> have birthdays today.</p>
+                    </div>
+                </div>
+
+                <!-- Contacts -->
+                <div class="pt-4">
+                    <div class="flex items-center justify-between px-2 mb-2">
+                        <h3 class="text-gray-500 uppercase text-xs font-semibold">Contacts</h3>
+                        <div class="flex space-x-3 text-gray-400">
+                            <button class="hover:text-gray-200">
+                                <i class="fas fa-video"></i>
+                            </button>
+                            <button class="hover:text-gray-200">
+                                <i class="fas fa-search"></i>
+                            </button>
+                            <button class="hover:text-gray-200">
+                                <i class="fas fa-ellipsis-h"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="space-y-1">
+                        <a href="#" class="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-800 relative">
+                            <div
+                                class="h-8 w-8 rounded-full bg-gradient-to-r from-green-500 to-teal-500 flex items-center justify-center text-white text-xs">
+                                MJ</div>
+                            <span>Michael Jordan</span>
+                            <div class="absolute right-3 h-2 w-2 rounded-full bg-green-500"></div>
+                        </a>
+                        <a href="#" class="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-800 relative">
+                            <div
+                                class="h-8 w-8 rounded-full bg-gradient-to-r from-pink-500 to-red-500 flex items-center justify-center text-white text-xs">
+                                EM</div>
+                            <span>Emma Miller</span>
+                        </a>
+                        <a href="#" class="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-800 relative">
+                            <div
+                                class="h-8 w-8 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 flex items-center justify-center text-white text-xs">
+                                TS</div>
+                            <span>Tom Smith</span>
+                            <div class="absolute right-3 h-2 w-2 rounded-full bg-green-500"></div>
+                        </a>
+                        <a href="#" class="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-800 relative">
+                            <div
+                                class="h-8 w-8 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center text-white text-xs">
+                                LS</div>
+                            <span>Lisa Simpson</span>
+                        </a>
+                        <a href="#" class="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-800 relative">
+                            <div
+                                class="h-8 w-8 rounded-full bg-gradient-to-r from-yellow-500 to-orange-500 flex items-center justify-center text-white text-xs">
+                                DR</div>
+                            <span>David Rodriguez</span>
+                            <div class="absolute right-3 h-2 w-2 rounded-full bg-green-500"></div>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Group Conversations -->
+                <div class="pt-4">
+                    <h3 class="text-gray-500 uppercase text-xs font-semibold px-2 mb-2">Group Conversations</h3>
+                    <div class="space-y-1">
+                        <a href="#" class="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-800">
+                            <div
+                                class="h-8 w-8 rounded-full bg-indigo-500 flex items-center justify-center text-white text-xs">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <span>Dev Team</span>
+                        </a>
+                        <a href="#" class="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-800">
+                            <div
+                                class="h-8 w-8 rounded-full bg-green-500 flex items-center justify-center text-white text-xs">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <span>College Friends</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation (Mobile) -->
+    <div class="lg:hidden fixed bottom-0 w-full bg-gray-800 border-t border-gray-700 z-50">
+        <div class="flex justify-around items-center h-14">
+            <a href="#" class="text-indigo-400 p-3">
+                <i class="fas fa-home text-xl"></i>
+            </a>
+            <a href="#" class="text-gray-400 hover:text-gray-200 p-3">
+                <i class="fas fa-users text-xl"></i>
+            </a>
+            <a href="#" class="text-gray-400 hover:text-gray-200 p-3 relative">
+                <i class="fas fa-video text-xl"></i>
+            </a>
+            <a href="#" class="text-gray-400 hover:text-gray-200 p-3 relative">
+                <i class="fas fa-bell text-xl"></i>
+                <span class="absolute top-1 right-2 h-2 w-2 bg-red-500 rounded-full animate-pulse"></span>
+            </a>
+            <a href="#" class="text-gray-400 hover:text-gray-200 p-3">
+                <i class="fas fa-bars text-xl"></i>
+            </a>
+        </div>
+    </div>
+
+    <!-- Create Post Modal -->
+    <div id="post-modal" class="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center hidden">
+        <div class="bg-gray-800 rounded-xl w-full max-w-xl mx-4 border border-gray-700">
+            <div class="p-4 border-b border-gray-700 flex justify-between items-center">
+                <h3 class="text-lg font-semibold">Create Post</h3>
+                <button onclick="closePostModal()"
+                    class="text-gray-400 hover:text-gray-200 p-1 rounded-full hover:bg-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="p-4">
+                <div class="flex items-center space-x-3 mb-4">
+                    <div
+                        class="h-10 w-10 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 flex items-center justify-center text-white font-semibold">
+                        JD</div>
+                    <div>
+                        <h4 class="font-medium">John Doe</h4>
+                        <div class="flex items-center space-x-1 text-xs text-gray-400">
+                            <button
+                                class="bg-gray-700 hover:bg-gray-600 px-2 py-1 rounded-md flex items-center space-x-1">
+                                <i class="fas fa-globe-americas text-xs"></i>
+                                <span>Public</span>
+                                <i class="fas fa-chevron-down text-xs"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <textarea id="post-content" class="bg-transparent w-full h-32 focus:outline-none resize-none text-lg"
+                    placeholder="What's on your mind, John?"></textarea>
+                <div id="post-preview" class="mt-3 rounded-xl overflow-hidden hidden">
+                    <img id="post-preview-image" src="" alt="Preview" class="w-full h-auto max-h-80 object-cover">
+                </div>
+                <div class="mt-3 border border-gray-700 rounded-xl p-3">
+                    <div class="flex justify-between">
+                        <span class="text-sm font-medium">Add to your post</span>
+                        <div class="flex space-x-3">
+                            <button onclick="triggerFileInput()"
+                                class="text-green-500 hover:bg-gray-700 p-2 rounded-full">
+                                <i class="fas fa-images"></i>
+                                <input type="file" id="post-image" class="hidden" accept="image/*">
+                            </button>
+                            <button class="text-yellow-500 hover:bg-gray-700 p-2 rounded-full">
+                                <i class="fas fa-user-tag"></i>
+                            </button>
+                            <button class="text-red-500 hover:bg-gray-700 p-2 rounded-full">
+                                <i class="fas fa-smile"></i>
+                            </button>
+                            <button class="text-blue-500 hover:bg-gray-700 p-2 rounded-full">
+                                <i class="fas fa-map-marker-alt"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="p-4 border-t border-gray-700">
+                <button id="post-button"
+                    class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-4 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled>
+                    Post
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reaction Popup -->
+    <div id="reaction-popup" class="hidden absolute bg-gray-800 rounded-full shadow-lg p-1 border border-gray-700 z-50">
+        <div class="flex space-x-1">
+            <button class="reaction-option hover:scale-125 transform transition" data-reaction="like">
+                <span class="text-2xl">👍</span>
+            </button>
+            <button class="reaction-option hover:scale-125 transform transition" data-reaction="love">
+                <span class="text-2xl">❤️</span>
+            </button>
+            <button class="reaction-option hover:scale-125 transform transition" data-reaction="haha">
+                <span class="text-2xl">😆</span>
+            </button>
+            <button class="reaction-option hover:scale-125 transform transition" data-reaction="wow">
+                <span class="text-2xl">😯</span>
+            </button>
+            <button class="reaction-option hover:scale-125 transform transition" data-reaction="sad">
+                <span class="text-2xl">😢</span>
+            </button>
+            <button class="reaction-option hover:scale-125 transform transition" data-reaction="angry">
+                <span class="text-2xl">😠</span>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // User dropdown toggle
+        const userMenu = document.getElementById('user-menu');
+        const userDropdown = document.getElementById('user-dropdown');
+
+        userMenu.addEventListener('click', () => {
+            userDropdown.classList.toggle('hidden');
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!userMenu.contains(e.target) && !userDropdown.contains(e.target)) {
+                userDropdown.classList.add('hidden');
+            }
+        });
+
+        // Post modal functionality
+        function openPostModal() {
+            document.getElementById('post-modal').classList.remove('hidden');
+        }
+
+        function closePostModal() {
+            document.getElementById('post-modal').classList.add('hidden');
+            document.getElementById('post-preview').classList.add('hidden');
+            document.getElementById('post-content').value = '';
+            document.getElementById('post-button').disabled = true;
+        }
+
+        // Enable/disable post button based on content
+        const postContent = document.getElementById('post-content');
+        const postButton = document.getElementById('post-button');
+
+        postContent.addEventListener('input', () => {
+            if (postContent.value.trim() !== '' || document.getElementById('post-preview-image').src !== '') {
+                postButton.disabled = false;
+            } else {
+                postButton.disabled = true;
+            }
+        });
+
+        // Image upload preview
+        function triggerFileInput() {
+            document.getElementById('post-image').click();
+        }
+
+        document.getElementById('post-image').addEventListener('change', function (e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (event) {
+                    const preview = document.getElementById('post-preview');
+                    const previewImage = document.getElementById('post-preview-image');
+                    previewImage.src = event.target.result;
+                    preview.classList.remove('hidden');
+                    postButton.disabled = false;
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Create new post
+        postButton.addEventListener('click', function () {
+            const content = postContent.value.trim();
+            const imageSrc = document.getElementById('post-preview-image').src;
+
+            if (content || imageSrc) {
+                const postsContainer = document.getElementById('posts-container');
+                const newPost = document.createElement('div');
+                newPost.className = 'bg-gray-800 rounded-xl p-4 mb-4 border border-gray-700 post-card transition-slow';
+                newPost.innerHTML = `
+                    <div class="flex justify-between items-start mb-3">
+                        <div class="flex items-center space-x-3">
+                            <div class="h-10 w-10 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 flex items-center justify-center text-white font-semibold">JD</div>
+                            <div>
+                                <h4 class="font-semibold hover:underline cursor-pointer">John Doe</h4>
+                                <div class="flex items-center space-x-1 text-xs text-gray-400">
+                                    <span>Just now</span>
+                                    <span>·</span>
+                                    <i class="fas fa-globe-americas text-xs"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <button class="text-gray-400 hover:text-gray-200">
+                            <i class="fas fa-ellipsis-h"></i>
+                        </button>
+                    </div>
+                    
+                    ${content ? `<p class="mb-4">${content}</p>` : ''}
+                    
+                    ${imageSrc ? `
+                    <div class="mb-3 rounded-xl overflow-hidden">
+                        <img src="${imageSrc}" alt="Post" class="w-full h-auto max-h-96 object-cover">
+                    </div>
+                    ` : ''}
+                    
+                    <div class="flex items-center justify-between text-gray-400 text-sm border-b border-gray-700 pb-2 mb-2">
+                        <div class="flex items-center space-x-1">
+                            <div class="h-5 w-5 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs">
+                                <i class="fas fa-thumbs-up"></i>
+                            </div>
+                            <span>0</span>
+                        </div>
+                        <div class="flex space-x-4">
+                            <span class="hover:underline cursor-pointer">0 comments</span>
+                            <span class="hover:underline cursor-pointer">0 shares</span>
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-between pt-1">
+                        <button class="flex-1 flex items-center justify-center space-x-2 text-gray-400 hover:bg-gray-700 py-1 rounded-lg transition-slow reaction-btn" data-post="new">
+                            <i class="far fa-thumbs-up"></i>
+                            <span>Like</span>
+                        </button>
+                        <button class="flex-1 flex items-center justify-center space-x-2 text-gray-400 hover:bg-gray-700 py-1 rounded-lg transition-slow">
+                            <i class="far fa-comment"></i>
+                            <span>Comment</span>
+                        </button>
+                        <button class="flex-1 flex items-center justify-center space-x-2 text-gray-400 hover:bg-gray-700 py-1 rounded-lg transition-slow">
+                            <i class="far fa-share-square"></i>
+                            <span>Share</span>
+                        </button>
+                    </div>
+                `;
+
+                postsContainer.prepend(newPost);
+                closePostModal();
+
+                // Add event listeners to new post
+                addReactionListeners();
+                addCommentListeners();
+            }
+        });
+
+        // Reaction functionality
+        function addReactionListeners() {
+            const reactionBtns = document.querySelectorAll('.reaction-btn');
+            const reactionPopup = document.getElementById('reaction-popup');
+            let activePost = null;
+
+            reactionBtns.forEach(btn => {
+                btn.addEventListener('mouseenter', (e) => {
+                    const rect = btn.getBoundingClientRect();
+                    reactionPopup.style.top = `${rect.top - 50}px`;
+                    reactionPopup.style.left = `${rect.left}px`;
+                    reactionPopup.classList.remove('hidden');
+                    activePost = btn.dataset.post;
+                });
+
+                btn.addEventListener('mouseleave', () => {
+                    setTimeout(() => {
+                        if (!reactionPopup.matches(':hover')) {
+                            reactionPopup.classList.add('hidden');
+                        }
+                    }, 300);
+                });
+            });
+
+            reactionPopup.addEventListener('mouseleave', () => {
+                reactionPopup.classList.add('hidden');
+            });
+
+            const reactionOptions = document.querySelectorAll('.reaction-option');
+            reactionOptions.forEach(option => {
+                option.addEventListener('click', () => {
+                    const reaction = option.dataset.reaction;
+                    // In a real app, you would send this to the server
+                    console.log(`Reacted with ${reaction} to post ${activePost}`);
+                    reactionPopup.classList.add('hidden');
+
+                    // Update the button visually
+                    const btn = document.querySelector(`.reaction-btn[data-post="${activePost}"]`);
+                    if (btn) {
+                        btn.innerHTML = `<span class="text-xl">${getReactionEmoji(reaction)}</span> <span>${reaction.charAt(0).toUpperCase() + reaction.slice(1)}</span>`;
+                    }
+                });
+            });
+        }
+
+        function getReactionEmoji(reaction) {
+            const emojis = {
+                'like': '👍',
+                'love': '❤️',
+                'haha': '😆',
+                'wow': '😯',
+                'sad': '😢',
+                'angry': '😠'
+            };
+            return emojis[reaction] || '👍';
+        }
+
+        // Comment functionality
+        function addCommentListeners() {
+            const commentBtns = document.querySelectorAll('.fa-comment');
+
+            commentBtns.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const post = e.target.closest('.post-card');
+                    if (post) {
+                        const commentsSection = post.querySelector('.comments-section');
+                        if (commentsSection) {
+                            commentsSection.classList.toggle('hidden');
+                        }
+                    }
+                });
+            });
+        }
+
+        // Load more posts
+        document.getElementById('load-more').addEventListener('click', function () {
+            // Simulate loading
+            this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span>Loading...</span>';
+
+            setTimeout(() => {
+                // In a real app, you would fetch more posts from the server
+                const postsContainer = document.getElementById('posts-container');
+                const newPost = document.createElement('div');
+                newPost.className = 'bg-gray-800 rounded-xl p-4 mb-4 border border-gray-700 post-card transition-slow';
+                newPost.innerHTML = `
+                    <div class="flex justify-between items-start mb-3">
+                        <div class="flex items-center space-x-3">
+                            <div class="h-10 w-10 rounded-full bg-gradient-to-r from-teal-500 to-green-500 flex items-center justify-center text-white font-semibold">TS</div>
+                            <div>
+                                <h4 class="font-semibold hover:underline cursor-pointer">Tom Smith</h4>
+                                <div class="flex items-center space-x-1 text-xs text-gray-400">
+                                    <span>3 hrs ago</span>
+                                    <span>·</span>
+                                    <i class="fas fa-user-friends text-xs"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <button class="text-gray-400 hover:text-gray-200">
+                            <i class="fas fa-ellipsis-h"></i>
+                        </button>
+                    </div>
+                    
+                    <p class="mb-4">Just finished reading "Atomic Habits" by James Clear. Highly recommend it to anyone looking to build better habits and break bad ones. What are you all reading these days?</p>
+                    
+                    <div class="mb-3 rounded-xl overflow-hidden bg-gray-700 p-4">
+                        <div class="flex items-start space-x-3">
+                            <div class="h-16 w-12 bg-gray-600 rounded flex-shrink-0"></div>
+                            <div>
+                                <h4 class="font-medium">Atomic Habits</h4>
+                                <p class="text-sm text-gray-400">by James Clear</p>
+                                <p class="text-xs mt-2 text-gray-300">An easy & proven way to build good habits & break bad ones</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center justify-between text-gray-400 text-sm border-b border-gray-700 pb-2 mb-2">
+                        <div class="flex items-center space-x-1">
+                            <div class="h-5 w-5 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs">
+                                <i class="fas fa-thumbs-up"></i>
+                            </div>
+                            <span>56</span>
+                        </div>
+                        <div class="flex space-x-4">
+                            <span class="hover:underline cursor-pointer">12 comments</span>
+                            <span class="hover:underline cursor-pointer">3 shares</span>
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-between pt-1">
+                        <button class="flex-1 flex items-center justify-center space-x-2 text-gray-400 hover:bg-gray-700 py-1 rounded-lg transition-slow reaction-btn" data-post="new">
+                            <i class="far fa-thumbs-up"></i>
+                            <span>Like</span>
+                        </button>
+                        <button class="flex-1 flex items-center justify-center space-x-2 text-gray-400 hover:bg-gray-700 py-1 rounded-lg transition-slow">
+                            <i class="far fa-comment"></i>
+                            <span>Comment</span>
+                        </button>
+                        <button class="flex-1 flex items-center justify-center space-x-2 text-gray-400 hover:bg-gray-700 py-1 rounded-lg transition-slow">
+                            <i class="far fa-share-square"></i>
+                            <span>Share</span>
+                        </button>
+                    </div>
+                `;
+
+                postsContainer.appendChild(newPost);
+                this.innerHTML = '<i class="fas fa-sync-alt"></i> <span>Load More</span>';
+
+                // Add event listeners to new post
+                addReactionListeners();
+                addCommentListeners();
+            }, 1500);
+        });
+
+        // Initialize listeners
+        document.addEventListener('DOMContentLoaded', () => {
+            addReactionListeners();
+            addCommentListeners();
+        });
+    </script>
+</body>
+
+</html>

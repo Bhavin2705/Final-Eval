@@ -5,10 +5,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Profile Page</title>
-    <!-- Font Awesome 6.6.0 to match homePage.ejs -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+    <script src="/components/js/profile.js"></script>
     <style>
-        /* Base styles */
         :root {
             --primary-color: #0070f3;
             --primary-hover: #0060df;
@@ -48,7 +47,6 @@
             position: relative;
         }
 
-        /* Profile Header */
         .profile-header {
             display: flex;
             flex-direction: column;
@@ -104,7 +102,6 @@
             margin-top: 0.25rem;
         }
 
-        /* Tabs */
         .tabs-container {
             width: 100%;
         }
@@ -140,7 +137,6 @@
             display: block;
         }
 
-        /* Card */
         .card {
             background-color: var(--card-background);
             border-radius: var(--radius);
@@ -176,7 +172,6 @@
             border-top: 1px solid var(--border-color);
         }
 
-        /* Forms */
         .form-group {
             margin-bottom: 1.5rem;
         }
@@ -280,7 +275,6 @@
             background-color: var(--primary-hover);
         }
 
-        /* Buttons */
         .icon-button {
             width: 2.5rem;
             height: 2.5rem;
@@ -308,7 +302,6 @@
             color: var(--text-color);
         }
 
-        /* Back to Home Button */
         .back-home-button {
             position: absolute;
             top: 1rem;
@@ -321,7 +314,6 @@
             color: white;
             border: none;
             border-radius: 2rem;
-            /* Rounded button */
             font-size: 1rem;
             font-weight: 500;
             cursor: pointer;
@@ -340,7 +332,6 @@
             box-shadow: var(--shadow-sm);
         }
 
-        /* Password requirements */
         .requirements-title {
             font-size: 0.875rem;
             font-weight: 500;
@@ -358,7 +349,6 @@
             margin-bottom: 0.25rem;
         }
 
-        /* Responsive */
         @media (max-width: 640px) {
             .container {
                 padding: 1rem 0.75rem;
@@ -622,6 +612,71 @@
             }
         }
     </style>
+    <script>
+        if (!window.ProfileManager) {
+            console.log('Creating fallback ProfileManager');
+            window.ProfileManager = {
+                updateProfilePhoto: function (photoUrl) {
+                    if (!photoUrl) return;
+                    console.log('Fallback: Updating profile photo:', photoUrl);
+                    try {
+                        localStorage.setItem('profilePicture', photoUrl);
+                        const profileImage = document.getElementById('profile-image');
+                        if (profileImage) profileImage.src = photoUrl;
+                    } catch (error) {
+                        console.error('Error updating profile photo:', error);
+                    }
+                },
+                loadProfilePhoto: function () {
+                    console.log('Fallback: Loading profile photo');
+                    const storedPhoto = localStorage.getItem('profilePicture');
+                    if (storedPhoto) {
+                        const profileImage = document.getElementById('profile-image');
+                        if (profileImage) profileImage.src = storedPhoto;
+                    }
+                },
+                uploadProfilePhoto: async function (file) {
+                    if (!file) {
+                        return { success: false, error: 'No file provided' };
+                    }
+
+                    try {
+                        console.log('Fallback: Uploading profile photo:', file.name);
+                        const formData = new FormData();
+                        formData.append('profilePhoto', file);
+
+                        const response = await fetch('/api/profile/photo', {
+                            method: 'POST',
+                            body: formData,
+                            credentials: 'include'
+                        });
+
+                        if (!response.ok) {
+                            const errorData = await response.json().catch(() => ({}));
+                            throw new Error(errorData.message || `HTTP ${response.status} ${response.statusText}`);
+                        }
+
+                        const data = await response.json();
+                        if (data.photoUrl) {
+                            this.updateProfilePhoto(data.photoUrl);
+                            return {
+                                success: true,
+                                photoUrl: data.photoUrl
+                            };
+                        }
+
+                        throw new Error('No photo URL in response');
+                    } catch (error) {
+                        console.error('Error uploading profile photo:', error);
+                        return {
+                            success: false,
+                            error: error.message
+                        };
+                    }
+                }
+            };
+        }
+    </script>
 </head>
 
 <body>
@@ -634,7 +689,7 @@
         <div class="profile-header">
             <div class="profile-avatar-container">
                 <div class="profile-avatar">
-                    <img src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-G9y9zdBMGxzuob6IDkm8zBhLxxIpAw.png"
+                    <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128' width='128' height='128'%3E%3Ccircle cx='64' cy='64' r='64' fill='%23ddd'/%3E%3Ccircle cx='64' cy='50' r='24' fill='%23bbb'/%3E%3Cpath d='M32 106c0-22 14-32 32-32s32 10 32 32' fill='%23bbb'/%3E%3C/svg%3E"
                         alt="Profile Picture" id="profile-image">
                     <div class="avatar-overlay">
                         <button class="icon-button" id="upload-profile-picture">
@@ -643,8 +698,12 @@
                     </div>
                 </div>
             </div>
-            <h1 class="profile-name" id="profile-name">Jill Nichols</h1>
-            <p class="profile-email" id="profile-email">jill.nichols@example.com</p>
+            <h1 class="profile-name" id="profile-name">
+                <%= user ? user.name : 'Guest' %>
+            </h1>
+            <p class="profile-email" id="profile-email">
+                <%= user ? user.email : 'No email provided' %>
+            </p>
         </div>
 
         <div class="tabs-container">
@@ -668,17 +727,18 @@
                         <form id="profile-form">
                             <div class="form-group">
                                 <label for="name">Name</label>
-                                <input type="text" id="name" value="Jill Nichols" disabled>
+                                <input type="text" id="name" value="<%= user ? user.name : '' %>" disabled>
                             </div>
 
                             <div class="form-group">
                                 <label for="email">Email</label>
-                                <input type="email" id="email" value="jill.nichols@example.com" disabled>
+                                <input type="email" id="email" value="<%= user ? user.email : '' %>" disabled>
                             </div>
 
                             <div class="form-group">
                                 <label for="bio">Bio</label>
-                                <textarea id="bio" placeholder="Tell us about yourself" disabled></textarea>
+                                <textarea id="bio" placeholder="Tell us about yourself"
+                                    disabled><%= user ? user.bio || '' : '' %></textarea>
                             </div>
 
                             <div class="form-group" id="profile-picture-group" style="display: none;">
@@ -763,60 +823,56 @@
 
     <script>
         document.addEventListener("DOMContentLoaded", async () => {
-            // Fetch profile data on page load, aligned with /api/me from homePage.ejs
-            const fetchProfileData = async () => {
+            console.log('ProfileManager status:', window.ProfileManager ? 'available' : 'not available');
+            initializeProfile();
+        });
+
+        async function initializeProfile() {
+            const defaultProfileImage = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128' width='128' height='128'%3E%3Ccircle cx='64' cy='64' r='64' fill='%23ddd'/%3E%3Ccircle cx='64' cy='50' r='24' fill='%23bbb'/%3E%3Cpath d='M32 106c0-22 14-32 32-32s32 10 32 32' fill='%23bbb'/%3E%3C/svg%3E";
+
+            const fetchProfileData = async (retries = 2) => {
                 try {
-                    // Load from localStorage first
-                    const storedName = localStorage.getItem('profileName');
-                    const storedEmail = localStorage.getItem('profileEmail');
-                    const storedBio = localStorage.getItem('profileBio');
-                    const storedImage = localStorage.getItem('profilePicture');
-
-                    // Populate with localStorage data if available
-                    document.getElementById('name').value = storedName || 'Guest';
-                    document.getElementById('email').value = storedEmail || '';
-                    document.getElementById('bio').value = storedBio || '';
-                    document.getElementById('profile-name').textContent = storedName || 'Guest';
-                    document.getElementById('profile-email').textContent = storedEmail || 'No email provided';
-                    document.getElementById('profile-image').src = storedImage || 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-G9y9zdBMGxzuob6IDkm8zBhLxxIpAw.png';
-
-                    // Try fetching from /api/me for server data (fallback if localStorage is empty)
                     const response = await fetch('/api/me', {
                         method: 'GET',
-                        credentials: 'include' // Use session-based auth like homePage.ejs
+                        credentials: 'include'
                     });
 
-                    if (!response.ok) {
-                        throw new Error(`Failed to fetch profile data: ${response.status} ${response.statusText}`);
-                    }
+                    if (response.ok) {
+                        const { user: profileData } = await response.json();
 
-                    const data = await response.json();
-                    const profileData = data.user || {};
+                        const profileImg = document.getElementById('profile-image');
+                        profileImg.src = profileData.profilePhoto || localStorage.getItem('profilePicture') || defaultProfileImage;
 
-                    // Update fields only if localStorage is empty
-                    if (!storedName) {
                         document.getElementById('name').value = profileData.name || 'Guest';
-                        document.getElementById('profile-name').textContent = profileData.name || 'Guest';
-                    }
-                    if (!storedEmail) {
                         document.getElementById('email').value = profileData.email || '';
-                        document.getElementById('profile-email').textContent = profileData.email || 'No email provided';
-                    }
-                    if (!storedBio) {
                         document.getElementById('bio').value = profileData.bio || '';
-                    }
-                    if (!storedImage) {
-                        document.getElementById('profile-image').src = profileData.profilePicture || 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-G9y9zdBMGxzuob6IDkm8zBhLxxIpAw.png';
+                        document.getElementById('profile-name').textContent = profileData.name || 'Guest';
+                        document.getElementById('profile-email').textContent = profileData.email || 'No email provided';
+                    } else {
+                        throw new Error('Failed to fetch profile data');
                     }
                 } catch (error) {
-                    console.error('Error fetching profile data:', error);
-                    alert('Failed to load profile data from server. Using local data.');
+                    console.warn('Failed to fetch profile data:', error);
+                    if (retries > 0) {
+                        setTimeout(() => fetchProfileData(retries - 1), 1000);
+                    } else {
+                        document.getElementById('profile-image').src = localStorage.getItem('profilePicture') || defaultProfileImage;
+
+                        const storedName = localStorage.getItem('profileName');
+                        const storedEmail = localStorage.getItem('profileEmail');
+                        const storedBio = localStorage.getItem('profileBio');
+
+                        document.getElementById('name').value = storedName || 'Guest';
+                        document.getElementById('email').value = storedEmail || '';
+                        document.getElementById('bio').value = storedBio || '';
+                        document.getElementById('profile-name').textContent = storedName || 'Guest';
+                        document.getElementById('profile-email').textContent = storedEmail || 'No email provided';
+                    }
                 }
             };
 
             await fetchProfileData();
 
-            // Tab switching
             const tabButtons = document.querySelectorAll('.tab-button');
             const tabContents = document.querySelectorAll('.tab-content');
 
@@ -831,7 +887,6 @@
                 });
             });
 
-            // Edit mode toggle
             const editToggle = document.getElementById('edit-toggle');
             const nameInput = document.getElementById('name');
             const emailInput = document.getElementById('email');
@@ -851,27 +906,6 @@
                 saveProfileButton.style.display = isEditing ? 'block' : 'none';
             });
 
-            // Password visibility toggle
-            const passwordToggles = document.querySelectorAll('.password-toggle');
-
-            passwordToggles.forEach(toggle => {
-                toggle.addEventListener('click', () => {
-                    const input = toggle.previousElementSibling;
-                    const icon = toggle.querySelector('i');
-
-                    if (input.type === 'password') {
-                        input.type = 'text';
-                        icon.classList.remove('fa-eye');
-                        icon.classList.add('fa-eye-slash');
-                    } else {
-                        input.type = 'password';
-                        icon.classList.remove('fa-eye-slash');
-                        icon.classList.add('fa-eye');
-                    }
-                });
-            });
-
-            // Handle profile picture upload (store in localStorage)
             const uploadButton = document.getElementById('upload-button');
             const profileImageButton = document.getElementById('upload-profile-picture');
             const profileImage = document.getElementById('profile-image');
@@ -880,38 +914,26 @@
                 if (!file) return;
 
                 try {
-                    // Validate file size (1MB max)
                     if (file.size > 1024 * 1024) {
                         throw new Error('File size exceeds 1MB limit');
                     }
 
-                    // Create form data
-                    const formData = new FormData();
-                    formData.append('profilePhoto', file);
-
-                    // Send to server
-                    const response = await fetch('/api/profile/photo', {
-                        method: 'POST',
-                        body: formData,
-                        credentials: 'include'
-                    });
-
-                    if (!response.ok) {
-                        const error = await response.json();
-                        throw new Error(error.message || 'Failed to upload photo');
+                    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
+                    if (!allowedTypes.includes(file.type)) {
+                        throw new Error('Only JPG, PNG, or GIF files are allowed');
                     }
 
-                    const data = await response.json();
+                    const result = await window.ProfileManager.uploadProfilePhoto(file);
 
-                    // Update profile image
-                    profileImage.src = data.photoUrl;
-
-                    // Store in localStorage as fallback
-                    try {
-                        localStorage.setItem('profilePicture', data.photoUrl);
-                    } catch (error) {
-                        console.warn('Failed to store profile picture URL in localStorage');
+                    if (!result.success) {
+                        throw new Error(result.error || 'Upload failed');
                     }
+
+                    profileImage.src = result.photoUrl;
+
+                    localStorage.setItem('profilePicture', result.photoUrl);
+
+                    await fetchProfileData();
 
                     alert('Profile picture updated successfully!');
                 } catch (error) {
@@ -920,121 +942,73 @@
                 }
             };
 
-            // Upload via button in form
-            uploadButton.addEventListener('click', () => {
-                const fileInput = document.createElement('input');
-                fileInput.type = 'file';
-                fileInput.accept = 'image/*';
-                fileInput.onchange = async (e) => {
-                    const file = e.target.files[0];
-                    await handleProfilePictureUpload(file);
-                };
-                fileInput.click();
-            });
+            if (uploadButton) {
+                uploadButton.addEventListener('click', () => {
+                    const fileInput = document.createElement('input');
+                    fileInput.type = 'file';
+                    fileInput.accept = 'image/*';
+                    fileInput.onchange = async (e) => {
+                        const file = e.target.files[0];
+                        await handleProfilePictureUpload(file);
+                    };
+                    fileInput.click();
+                });
+            }
 
-            // Upload via avatar overlay button
-            profileImageButton.addEventListener('click', () => {
-                const fileInput = document.createElement('input');
-                fileInput.type = 'file';
-                fileInput.accept = 'image/*';
-                fileInput.onchange = async (e) => {
-                    const file = e.target.files[0];
-                    await handleProfilePictureUpload(file);
-                };
-                fileInput.click();
-            });
+            if (profileImageButton) {
+                profileImageButton.addEventListener('click', () => {
+                    const fileInput = document.createElement('input');
+                    fileInput.type = 'file';
+                    fileInput.accept = 'image/*';
+                    fileInput.onchange = async (e) => {
+                        const file = e.target.files[0];
+                        await handleProfilePictureUpload(file);
+                    };
+                    fileInput.click();
+                });
+            }
 
-            // Handle profile form submission (store in localStorage)
-            const profileForm = document.getElementById('profile-form');
-
-            profileForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
-
-                const formData = {
-                    name: nameInput.value,
-                    email: emailInput.value,
-                    bio: bioInput.value
-                };
-
-                try {
-                    // Store in localStorage
-                    try {
-                        localStorage.setItem('profileName', formData.name);
-                        localStorage.setItem('profileEmail', formData.email);
-                        localStorage.setItem('profileBio', formData.bio);
-                    } catch (error) {
-                        throw new Error('Failed to store profile data in localStorage: Storage may be full');
-                    }
-
-                    // Update UI
-                    document.getElementById('profile-name').textContent = formData.name || 'Guest';
-                    document.getElementById('profile-email').textContent = formData.email || 'No email provided';
-
-                    // Exit edit mode
-                    isEditing = false;
-                    editToggle.innerHTML = '<i class="fas fa-edit"></i>';
-                    nameInput.disabled = true;
-                    emailInput.disabled = true;
-                    bioInput.disabled = true;
-                    profilePictureGroup.style.display = 'none';
-                    saveProfileButton.style.display = 'none';
-
-                    alert('Profile updated successfully!');
-                } catch (error) {
-                    console.error('Error updating profile:', error);
-                    alert(`Failed to update profile: ${error.message}`);
-                }
-            });
-
-            // Handle password form submission
-            const passwordForm = document.getElementById('password-form');
-
-            passwordForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
-
-                const currentPassword = document.getElementById('current-password').value;
-                const newPassword = document.getElementById('new-password').value;
-                const confirmPassword = document.getElementById('confirm-password').value;
-
-                if (!currentPassword || !newPassword || !confirmPassword) {
-                    alert('Please fill in all password fields');
-                    return;
-                }
-
-                if (newPassword !== confirmPassword) {
-                    alert('New passwords do not match');
-                    return;
-                }
-
-                try {
-                    const response = await fetch('/api/change-password', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        credentials: 'include',
-                        body: JSON.stringify({ currentPassword, newPassword })
-                    });
-
-                    if (!response.ok) {
-                        const errorData = await response.json().catch(() => ({}));
-                        throw new Error(`Failed to update password: ${response.status} ${response.statusText} - ${errorData.message || 'Unknown error'}`);
-                    }
-
-                    passwordForm.reset();
-                    alert('Password updated successfully!');
-                } catch (error) {
-                    console.error('Error updating password:', error);
-                    alert(`Failed to update password: ${error.message}`);
-                }
-            });
-
-            // Handle back to home button click
             const backHomeButton = document.getElementById('back-home-button');
-            backHomeButton.addEventListener('click', () => {
-                window.location.replace('/'); // Redirect to home route and force reload
-            });
-        });
+            if (backHomeButton) {
+                backHomeButton.addEventListener('click', () => {
+                    window.location.href = '/';
+                });
+            }
+
+            const passwordForm = document.getElementById('password-form');
+            if (passwordForm) {
+                passwordForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                });
+            }
+
+            const passwordToggles = document.querySelectorAll('.password-toggle');
+            if (passwordToggles) {
+                passwordToggles.forEach(toggle => {
+                    toggle.addEventListener('click', () => {
+                        const input = toggle.previousElementSibling;
+                        const icon = toggle.querySelector('i');
+
+                        if (input.type === 'password') {
+                            input.type = 'text';
+                            icon.classList.remove('fa-eye');
+                            icon.classList.add('fa-eye-slash');
+                        } else {
+                            input.type = 'password';
+                            icon.classList.remove('fa-eye-slash');
+                            icon.classList.add('fa-eye');
+                        }
+                    });
+                });
+            }
+
+            const profileForm = document.getElementById('profile-form');
+            if (profileForm) {
+                profileForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                });
+            }
+        }
     </script>
 </body>
 

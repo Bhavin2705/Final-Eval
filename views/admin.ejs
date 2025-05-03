@@ -58,7 +58,7 @@
                         }
                     },
                     boxShadow: {
-                        'soft': '0 2px 15px -3px rgba(0, 0, 0, 0.07), 0 10px 20px -2px rgba(0, 0, 0, 0.04)',
+                        'soft': '0 2px  Got 15px -3px rgba(0, 0, 0, 0.07), 0 10px 20px -2px rgba(0, 0, 0, 0.04)',
                         'glow': '0 0 15px rgba(14, 165, 233, 0.5)',
                     }
                 }
@@ -286,6 +286,8 @@
                         <select id="roleFilter"
                             class="appearance-none bg-white border border-gray-300 rounded-lg px-4 py-2 pr-8 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all">
                             <option value="all">All Roles</option>
+                            <option value="owner">Owners</option>
+                            <option value="admin">Admins</option>
                             <option value="moderator">Moderators</option>
                             <option value="user">Users</option>
                             <option value="guest">Guests</option>
@@ -621,6 +623,7 @@
         let itemsPerPage = 5;
         let activeTab = 'all';
         let loggedInAdminId = null;
+        let loggedInAdminRole = 'admin'; // Default role, updated in checkAuth
 
         // Clear localStorage
         function clearLocalStorage() {
@@ -664,8 +667,9 @@
 
                 if (response.ok) {
                     const data = await response.json();
-                    if (data.user && data.user.role === 'admin' && data.user.email) {
+                    if (data.user && (data.user.role === 'admin' || data.user.role === 'owner') && data.user.email) {
                         loggedInAdminId = data.user.id;
+                        loggedInAdminRole = data.user.role; // Store the admin's role
                         dashboardElements.adminName.textContent = data.user.name || 'Admin';
                         authElements.loginSection.classList.add('hidden');
                         authElements.dashboardSection.classList.remove('hidden');
@@ -686,16 +690,15 @@
         }
 
         // Fetch users
-        // Fetch users
         async function fetchUsers() {
             try {
-                const response = await fetch('/api/admin/users', { // Changed from /api/users
+                const response = await fetch('/api/admin/users', {
                     method: 'GET',
                     credentials: 'include'
                 });
                 if (response.ok) {
                     const data = await response.json();
-                    users = (data.users || []).filter(user => !['admin', 'owner'].includes(user.role));
+                    users = (data.users || []); // Include all users, no filtering
                     filteredUsers = [...users];
                     console.log('Fetched users:', users);
                 } else {
@@ -785,6 +788,18 @@
             renderTable();
         }
 
+        // Determine user rank for permission checks
+        function getUserRank(role) {
+            const ranks = {
+                guest: 1,
+                user: 2,
+                moderator: 3,
+                admin: 4,
+                owner: 5
+            };
+            return ranks[role] || 0;
+        }
+
         // Render table
         function renderTable() {
             const start = (currentPage - 1) * itemsPerPage;
@@ -818,7 +833,13 @@
                     }
 
                     let roleClass, roleIcon;
-                    if (user.role === 'moderator') {
+                    if (user.role === 'owner') {
+                        roleClass = 'bg-blue-100 text-blue-800';
+                        roleIcon = 'fa-crown';
+                    } else if (user.role === 'admin') {
+                        roleClass = 'bg-indigo-100 text-indigo-800';
+                        roleIcon = 'fa-user-shield';
+                    } else if (user.role === 'moderator') {
                         roleClass = 'bg-purple-100 text-purple-800';
                         roleIcon = 'fa-user-cog';
                     } else if (user.role === 'user') {
@@ -831,8 +852,14 @@
 
                     const guestTooltip = user.role === 'guest' ? 'title="Guest users have no persistent account and cannot be modified"' : '';
                     const emailDisplay = user.role === 'guest' || !user.email || user.email === '-' ? 'N/A' : user.email;
+
+                    // Determine if actions are allowed based on rank
                     const isSelf = user.id == loggedInAdminId;
-                    const actionsDisplay = user.role === 'guest' || isSelf ? 'N/A' : `
+                    const adminRank = getUserRank(loggedInAdminRole);
+                    const userRank = getUserRank(user.role);
+                    const canModify = adminRank > userRank && user.role !== 'guest' && !isSelf;
+
+                    const actionsDisplay = user.role === 'guest' || isSelf || !canModify ? 'N/A' : `
                         <div class="flex space-x-2">
                             <button class="text-primary-600 hover:text-primary-800 transition-colors edit-user" data-id="${user.id}" title="Edit User">
                                 <i class="fas fa-edit"></i>
@@ -890,38 +917,52 @@
 
         // Attach table event listeners
         function attachTableEventListeners() {
+            const adminRank = getUserRank(loggedInAdminRole);
+
             document.querySelectorAll('.edit-user').forEach(button => {
-                button.addEventListener('click', () => openEditModal(button.getAttribute('data-id')));
+                const userId = button.getAttribute('data-id');
+                const user = users.find(u => u.id == userId);
+                if (user && getUserRank(user.role) >= adminRank) return; // Skip if rank is equal or higher
+                button.addEventListener('click', () => openEditModal(userId));
             });
 
             document.querySelectorAll('.demote-mod').forEach(button => {
+                const userId = button.getAttribute('data-id');
+                const user = users.find(u => u.id == userId);
+                if (user && getUserRank(user.role) >= adminRank) return;
                 button.addEventListener('click', () => {
                     showConfirmationModal('Demote Moderator', 'Are you sure you want to demote this moderator to a regular user?', 'warning', () => {
-                        demoteUser(button.getAttribute('data-id'), 'moderator');
+                        demoteUser(userId, 'moderator');
                     });
                 });
             });
 
             document.querySelectorAll('.demote-to-guest').forEach(button => {
+                const userId = button.getAttribute('data-id');
+                const user = users.find(u => u.id == userId);
+                if (user && getUserRank(user.role) >= adminRank) return;
                 button.addEventListener('click', () => {
                     showConfirmationModal(
                         'Demote to Guest',
                         'Are you sure you want to demote this user to a guest? This will remove their persistent account details and cannot be undone.',
                         'danger',
                         () => {
-                            demoteToGuest(button.getAttribute('data-id'));
+                            demoteToGuest(userId);
                         }
                     );
                 });
             });
 
             document.querySelectorAll('.ban-user').forEach(button => {
-                button.addEventListener('click', () => {
-                    const userId = button.getAttribute('data-id');
+                const userId = button.getAttribute('data-id');
+                const user = users.find(u => u.id == userId);
+                if (user && (getUserRank(user.role) >= adminRank || userId == loggedInAdminId)) {
                     if (userId == loggedInAdminId) {
                         showToast('Error', 'You cannot ban your own account.', 'error');
-                        return;
                     }
+                    return;
+                }
+                button.addEventListener('click', () => {
                     showConfirmationModal('Ban User', 'Are you sure you want to ban this user? They will be unable to access their account.', 'danger', () => {
                         banUser(userId);
                     });
@@ -929,12 +970,15 @@
             });
 
             document.querySelectorAll('.unban-user').forEach(button => {
-                button.addEventListener('click', () => {
-                    const userId = button.getAttribute('data-id');
+                const userId = button.getAttribute('data-id');
+                const user = users.find(u => u.id == userId);
+                if (user && (getUserRank(user.role) >= adminRank || userId == loggedInAdminId)) {
                     if (userId == loggedInAdminId) {
                         showToast('Error', 'You cannot unban your own account.', 'error');
-                        return;
                     }
+                    return;
+                }
+                button.addEventListener('click', () => {
                     showConfirmationModal('Unban User', 'Are you sure you want to unban this user? They will regain access to their account.', 'info', () => {
                         unbanUser(userId);
                     });
@@ -942,12 +986,15 @@
             });
 
             document.querySelectorAll('.delete-user').forEach(button => {
-                button.addEventListener('click', () => {
-                    const userId = button.getAttribute('data-id');
+                const userId = button.getAttribute('data-id');
+                const user = users.find(u => u.id == userId);
+                if (user && (getUserRank(user.role) >= adminRank || userId == loggedInAdminId)) {
                     if (userId == loggedInAdminId) {
                         showToast('Error', 'You cannot delete your own account.', 'error');
-                        return;
                     }
+                    return;
+                }
+                button.addEventListener('click', () => {
                     showConfirmationModal('Delete User', 'Are you sure you want to permanently delete this user?', 'danger', () => {
                         deleteUser(userId);
                     });
@@ -958,74 +1005,104 @@
         // Open edit modal
         async function openEditModal(userId) {
             const user = users.find(u => u.id == userId);
+            if (!user) {
+                showToast('Error', 'User not found.', 'error');
+                return;
+            }
+
             try {
                 const response = await fetch('/api/admin/me', {
                     method: 'GET',
                     credentials: 'include'
                 });
-                const data = await response.json();
-                const loggedInUser = data.user;
-                const isSelf = user && loggedInUser.id == user.id;
 
-                if (user && dashboardElements.editUserModal) {
-                    dashboardElements.editName.value = user.name || 'Guest';
-                    dashboardElements.editEmail.value = user.role === 'guest' || !user.email || user.email === '-' ? 'N/A' : user.email;
-                    dashboardElements.editRole.value = user.role;
-                    dashboardElements.editStatus.value = user.status;
-
-                    dashboardElements.editUserForm.dataset.userId = userId;
-
-                    if (!isSelf) {
-                        dashboardElements.editName.disabled = true;
-                        dashboardElements.editName.classList.add('bg-gray-100', 'cursor-not-allowed');
-                        dashboardElements.editEmail.disabled = true;
-                        dashboardElements.editEmail.classList.add('bg-gray-100', 'cursor-not-allowed');
-                        let note = dashboardElements.editUserModal.querySelector('.edit-restriction-note');
-                        if (!note) {
-                            note = document.createElement('p');
-                            note.className = 'edit-restriction-note text-sm text-gray-500 mb-4';
-                            note.textContent = 'Name and email can only be edited by the user themselves.';
-                            dashboardElements.editUserForm.insertBefore(note, dashboardElements.editUserForm.firstChild);
-                        }
-                    } else {
-                        dashboardElements.editName.disabled = false;
-                        dashboardElements.editName.classList.remove('bg-gray-100', 'cursor-not-allowed');
-                        dashboardElements.editEmail.disabled = false;
-                        dashboardElements.editEmail.classList.remove('bg-gray-100', 'cursor-not-allowed');
-                        const note = dashboardElements.editUserModal.querySelector('.edit-restriction-note');
-                        if (note) note.remove();
-                    }
-
-                    if (isSelf) {
-                        dashboardElements.editRole.disabled = true;
-                        dashboardElements.editRole.classList.add('bg-gray-100', 'cursor-not-allowed');
-                        let adminNote = dashboardElements.editUserModal.querySelector('.admin-restriction-note');
-                        if (!adminNote) {
-                            adminNote = document.createElement('p');
-                            adminNote.className = 'admin-restriction-note text-sm text-gray-500 mb-4';
-                            adminNote.textContent = 'Admin role cannot be changed for security reasons.';
-                            dashboardElements.editUserForm.insertBefore(adminNote, dashboardElements.editUserForm.firstChild);
-                        }
-                    } else {
-                        dashboardElements.editRole.disabled = false;
-                        dashboardElements.editRole.classList.remove('bg-gray-100', 'cursor-not-allowed');
-                        const adminNote = dashboardElements.editUserModal.querySelector('.admin-restriction-note');
-                        if (adminNote) adminNote.remove();
-                    }
-
-                    dashboardElements.editUserModal.classList.remove('hidden');
-                } else {
-                    throw new Error('User not found or modal unavailable');
+                if (!response.ok) {
+                    throw new Error(`Failed to verify current user: ${response.status}`);
                 }
+
+                const data = await response.json();
+                if (!data.user) {
+                    throw new Error('Invalid response: missing user data');
+                }
+
+                const isSelf = user.id == data.user.id;
+                const adminRank = getUserRank(loggedInAdminRole);
+                const userRank = getUserRank(user.role);
+
+                if (userRank >= adminRank && !isSelf) {
+                    showToast('Error', 'You cannot edit users with equal or higher rank.', 'error');
+                    return;
+                }
+
+                if (!dashboardElements.editUserModal) {
+                    throw new Error('Edit modal elements not found');
+                }
+
+                // Set form values
+                dashboardElements.editName.value = user.name || 'Guest';
+                dashboardElements.editEmail.value = user.role === 'guest' || !user.email || user.email === '-' ? 'N/A' : user.email;
+                dashboardElements.editRole.value = user.role;
+                dashboardElements.editStatus.value = user.status;
+                dashboardElements.editUserForm.dataset.userId = userId;
+
+                // Handle field restrictions
+                if (!isSelf) {
+                    dashboardElements.editName.disabled = true;
+                    dashboardElements.editName.classList.add('bg-gray-100', 'cursor-not-allowed');
+                    dashboardElements.editEmail.disabled = true;
+                    dashboardElements.editEmail.classList.add('bg-gray-100', 'cursor-not-allowed');
+
+                    let note = dashboardElements.editUserModal.querySelector('.edit-restriction-note');
+                    if (!note) {
+                        note = document.createElement('p');
+                        note.className = 'edit-restriction-note text-sm text-gray-500 mb-4';
+                        note.textContent = 'Name and email can only be edited by the user themselves.';
+                        dashboardElements.editUserForm.insertBefore(note, dashboardElements.editUserForm.firstChild);
+                    }
+                } else {
+                    // Reset restrictions for self-editing
+                    dashboardElements.editName.disabled = false;
+                    dashboardElements.editName.classList.remove('bg-gray-100', 'cursor-not-allowed');
+                    dashboardElements.editEmail.disabled = false;
+                    dashboardElements.editEmail.classList.remove('bg-gray-100', 'cursor-not-allowed');
+                    const note = dashboardElements.editUserModal.querySelector('.edit-restriction-note');
+                    if (note) note.remove();
+                }
+
+                // Handle role restrictions for self-editing
+                if (isSelf) {
+                    dashboardElements.editRole.disabled = true;
+                    dashboardElements.editRole.classList.add('bg-gray-100', 'cursor-not-allowed');
+                    let adminNote = dashboardElements.editUserModal.querySelector('.admin-restriction-note');
+                    if (!adminNote) {
+                        adminNote = document.createElement('p');
+                        adminNote.className = 'admin-restriction-note text-sm text-gray-500 mb-4';
+                        adminNote.textContent = 'Your role cannot be changed for security reasons.';
+                        dashboardElements.editUserForm.insertBefore(adminNote, dashboardElements.editUserForm.firstChild);
+                    }
+                } else {
+                    dashboardElements.editRole.disabled = false;
+                    dashboardElements.editRole.classList.remove('bg-gray-100', 'cursor-not-allowed');
+                    const adminNote = dashboardElements.editUserModal.querySelector('.admin-restriction-note');
+                    if (adminNote) adminNote.remove();
+                }
+
+                dashboardElements.editUserModal.classList.remove('hidden');
             } catch (err) {
                 console.error('Error opening edit modal:', err);
-                showToast('Error', 'Failed to load edit modal.', 'error');
+                showToast('Error', err.message || 'Failed to load edit modal.', 'error');
             }
         }
 
         // Demote user
         async function demoteUser(userId, fromRole) {
             try {
+                const user = users.find(u => u.id == userId);
+                if (getUserRank(user.role) >= getUserRank(loggedInAdminRole)) {
+                    showToast('Error', 'You cannot demote users with equal or higher rank.', 'error');
+                    return;
+                }
+
                 const response = await fetch(`/api/users/demote`, {
                     method: 'PATCH',
                     headers: { 'Content-Type': 'application/json' },
@@ -1050,6 +1127,12 @@
         // Demote to guest
         async function demoteToGuest(userId) {
             try {
+                const user = users.find(u => u.id == userId);
+                if (getUserRank(user.role) >= getUserRank(loggedInAdminRole)) {
+                    showToast('Error', 'You cannot demote users with equal or higher rank.', 'error');
+                    return;
+                }
+
                 const payload = { id: userId, role: 'guest', email: null, name: null };
                 const response = await fetch(`/api/users`, {
                     method: 'PATCH',
@@ -1075,6 +1158,12 @@
         // Ban user
         async function banUser(userId) {
             try {
+                const user = users.find(u => u.id == userId);
+                if (getUserRank(user.role) >= getUserRank(loggedInAdminRole)) {
+                    showToast('Error', 'You cannot ban users with equal or higher rank.', 'error');
+                    return;
+                }
+
                 const response = await fetch(`/api/users/ban`, {
                     method: 'PATCH',
                     headers: { 'Content-Type': 'application/json' },
@@ -1099,6 +1188,12 @@
         // Unban user
         async function unbanUser(userId) {
             try {
+                const user = users.find(u => u.id == userId);
+                if (getUserRank(user.role) >= getUserRank(loggedInAdminRole)) {
+                    showToast('Error', 'You cannot unban users with equal or higher rank.', 'error');
+                    return;
+                }
+
                 const response = await fetch(`/api/users/unban`, {
                     method: 'PATCH',
                     headers: { 'Content-Type': 'application/json' },
@@ -1123,6 +1218,12 @@
         // Delete user
         async function deleteUser(userId) {
             try {
+                const user = users.find(u => u.id == userId);
+                if (getUserRank(user.role) >= getUserRank(loggedInAdminRole)) {
+                    showToast('Error', 'You cannot delete users with equal or higher rank.', 'error');
+                    return;
+                }
+
                 const response = await fetch(`/api/users`, {
                     method: 'DELETE',
                     headers: { 'Content-Type': 'application/json' },
@@ -1147,6 +1248,12 @@
         // Submit user edit
         async function submitUserEdit(userId) {
             try {
+                const user = users.find(u => u.id == userId);
+                if (getUserRank(user.role) >= getUserRank(loggedInAdminRole) && user.id != loggedInAdminId) {
+                    showToast('Error', 'You cannot edit users with equal or higher rank.', 'error');
+                    return;
+                }
+
                 const payload = { id: userId };
                 if (!dashboardElements.editName.disabled && dashboardElements.editName.value) payload.name = dashboardElements.editName.value;
                 if (!dashboardElements.editEmail.disabled && dashboardElements.editEmail.value && dashboardElements.editEmail.value !== 'N/A') payload.email = dashboardElements.editEmail.value;
@@ -1168,8 +1275,19 @@
                 });
 
                 if (response.ok) {
-                    await fetchUsers();
+                    // Close modal first
                     dashboardElements.editUserModal.classList.add('hidden');
+
+                    // Refresh user data
+                    await fetchUsers();
+
+                    // Update dashboard stats
+                    updateDashboard();
+
+                    // Force table refresh
+                    renderTable();
+
+                    // Show success message
                     showToast(
                         'User Updated',
                         payload.role === 'guest' ? 'User has been demoted to a guest.' : 'User details have been updated successfully.',
